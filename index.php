@@ -8,21 +8,21 @@
 //   'address' => ['123', 'maple street'],
 // ];
 $o_object = obj_parse_hd( __DIR__ . '/example-page.md' );
-print_hd_to_file($o_object, __DIR__ . '/example-page-printed.md' );
-echo s_hd_from_obj($o_object);
+write_hd_to_file($o_object, __DIR__ . '/example-page-printed.md', true );
+echo s_hd_from_obj($o_object, false);
 ?>
 </pre>
 <?php
-function print_hd_to_file($o_object, String $s_file_name ) {
-  $s_hd_markup = s_hd_from_obj($o_object);
+function write_hd_to_file($o_object, String $s_file_name, Bool $shorthand_lists = true ) {
+  $s_hd_markup = s_hd_from_obj($o_object, $shorthand_lists);
   file_put_contents($s_file_name, $s_hd_markup );
 }
-function s_hd_from_obj ( $o_object ) {
+function s_hd_from_obj ( $o_object, Bool $shorthand_lists = true ) {
   ob_start();
-  print_hd( $o_object );
+  echo_hd( $o_object, $shorthand_lists );
   return ob_get_clean();
 }
-function print_hd ($o_object, Int $current_level = 1 ) {
+function echo_hd ($o_object, Bool $shorthand_lists = true, Int $current_level = 1 ) {
   if ( is_object($o_object) ) {
     $o_object = json_decode(json_encode($o_object), true);
   }
@@ -33,32 +33,34 @@ function print_hd ($o_object, Int $current_level = 1 ) {
       $value = json_decode(json_encode($value), true);
     }
     if ( is_array($value) ) {
-      $all_scalar_and_sequential = true;
-      $sequential_key = -1;
-      foreach ($value as $sub_key => $sub_val) {
-        if ( $sub_key === ++$sequential_key && ! is_array($sub_val) ) continue;
-        $all_scalar_and_sequential = false;
-        break;
-      }
-      if ($all_scalar_and_sequential) {
-        print_list($value);
+      if ($shorthand_lists) {
+        $all_scalar_and_sequential = true;
+        $sequential_key = -1;
+        foreach ($value as $sub_key => $sub_val) {
+          if ( $sub_key === ++$sequential_key && ! is_array($sub_val) ) continue;
+          $all_scalar_and_sequential = false;
+          break;
+        }
+        if ($all_scalar_and_sequential) {
+          echo_list($value);
+        }
+        else {
+          echo_hd( $value, $shorthand_lists, $current_level + 1 );
+        }
       }
       else {
-        print_hd( $value, $current_level + 1 );
+        echo_hd( $value, $shorthand_lists, $current_level + 1 );
       }
-      // print_hd( $value, $current_level + 1 );
     }
     else {
-      print_scalar ($value);
-      // echo $value;
-      // echo PHP_EOL . PHP_EOL;
+      echo_scalar($value);
     }
   }
 }
-function print_list ($array) {
+function echo_list ($array) {
   foreach ($array as $value) {
     echo '- ';
-    $is_multiline = print_scalar($value, true);
+    $is_multiline = echo_scalar($value, true);
     if ( $is_multiline) {
       echo PHP_EOL;
     }
@@ -68,7 +70,7 @@ function print_list ($array) {
     echo PHP_EOL;
   }
 }
-function print_scalar ($value, $in_list = false) {
+function echo_scalar ($value, $in_list = false) {
   if ( $value === '' || $value === null || $value === false ) {
     echo PHP_EOL;
     return;
@@ -113,7 +115,7 @@ function print_scalar ($value, $in_list = false) {
   echo implode(PHP_EOL, $a_values) . PHP_EOL;
   if ($needs_to_be_literal) echo '```' . PHP_EOL;
 
-  // print_list function will handle its own new lines
+  // echo_list function will handle its own new lines
   if ($in_list) return $is_multiline;
 
   echo PHP_EOL;
