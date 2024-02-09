@@ -3,6 +3,7 @@
 - put into class with composer / autoloading capability
 - add phpunit tests
 - add basic readme explanation: "reads and writes files resembling an .md file to and from an arbitrary PHP array (or object)"
+- refactor / add type declarations where appropriate: https://www.php.net/manual/en/language.types.declarations.php
 
 ## discretionary
 - add option to omit numbers for sequential hash keys (e.g. '## 0' would be written just as '##')
@@ -13,3 +14,46 @@
 - properly print simple list items that contain literal scalar values
 - prettier line breaks for simple lists with single and multiline scalar values
 - add parameter to print "pretty" simple scalar lists (i.e. as dashes), or "ugly" ones (i.e. hashes)
+
+## add composer
+### composer init with psr-4 autoloading
+```shell
+This command will guide you through creating your composer.json config.
+
+Package name (<vendor>/<name>) [neckberg/hashdown]:
+Description []:
+Author [Nathan Eckberg <nathan.eckberg@gmail.com>, n to skip]:
+Minimum Stability []:
+Package Type (e.g. library, project, metapackage, composer-plugin) []:
+License []: MIT
+
+Define your dependencies.
+
+Would you like to define your dependencies (require) interactively [yes]? no
+Would you like to define your dev dependencies (require-dev) interactively [yes]? no
+Add PSR-4 autoload mapping? Maps namespace "Neckberg\Hashdown" to the entered relative path. [src/, n to skip]:
+
+{
+    "name": "neckberg/hashdown",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Neckberg\\Hashdown\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Nathan Eckberg",
+            "email": "nathan.eckberg@gmail.com"
+        }
+    ],
+    "require": {}
+}
+
+Do you confirm generation [yes]?
+Generating autoload files
+Generated autoload files
+Would you like the vendor directory added to your .gitignore [yes]?
+PSR-4 autoloading configured. Use "namespace NathanEckberg\Hashdown;" in src/
+Include the Composer autoloader with: require 'vendor/autoload.php';
+```
