@@ -1,0 +1,16 @@
+{
+    "name": "neckberg/hashdown",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Neckberg\\Hashdown\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Nathan Eckberg",
+            "email": "nathan.eckberg@gmail.com"
+        }
+    ],
+    "require": {}
+}
