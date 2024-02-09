@@ -12,5 +12,7 @@
             "email": "nathan.eckberg@gmail.com"
         }
     ],
-    "require": {}
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    }
 }
