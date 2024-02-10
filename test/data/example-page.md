@@ -127,4 +127,3 @@ widget area
 
 ### widget area
 right_sidebar
-

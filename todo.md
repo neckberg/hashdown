@@ -57,3 +57,28 @@ Would you like the vendor directory added to your .gitignore [yes]?
 PSR-4 autoloading configured. Use "namespace NathanEckberg\Hashdown;" in src/
 Include the Composer autoloader with: require 'vendor/autoload.php';
 ```
+
+## phpunit
+cd /Users/nathan.eckberg/local-sites/php/app/public/hashdown
+vendor/bin/phpunit
+```shell
+PHPUnit 11.0.2 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.2.3
+Configuration: /Users/nathan.eckberg/local-sites/php/app/public/hashdown/phpunit.xml
+
+F                                                                   1 / 1 (100%)
+
+Time: 00:00.010, Memory: 8.00 MB
+
+There was 1 failure:
+
+1) HashdownTest::test42
+42 must be 42
+Failed asserting that '42' is identical to 42.
+
+/Users/nathan.eckberg/local-sites/php/app/public/hashdown/test/HashdownTest.php:11
+
+FAILURES!
+Tests: 1, Assertions: 2, Failures: 1.
+```

@@ -3,7 +3,7 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Neckberg\\Hashdown\\": "src/"
+            "Hashdown\\": "src/"
         }
     },
     "authors": [
