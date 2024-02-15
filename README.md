@@ -1,9 +1,7 @@
 # Hashdown
-Reads and writes files resembling an .md file to and from an arbitrary PHP array or object.
+Reads and parses a strictly formatted .md file into a PHP associative array - or writes a PHP associative array or object to a structured .md file.
 
-Each header in an .md file defines a new key in an associative array, where the content beneath the header is the value of the key.
-
-For example, the following .md content would yield the proceeding PHP array:
+Each header in an .md file defines a new key in an associative array, where the content beneath the header is the value of the key. For example, the following .md content would yield the proceeding PHP array:
 ```md
 # Name
 Nathan
@@ -18,7 +16,7 @@ Blue
 ]
 ```
 
-H1s ('#') become top level keys, while H2s ('##') become secondary level keys, and so on:
+H1s ('#') become top level keys, while H2s ('##') become secondary level keys, and so on (note that skipping a level is not allowed):
 ```md
 # Name
 ## First
@@ -36,9 +34,8 @@ The above becomes:
   ]
 ]
 ```
-Note that skipping a level is not allowed.
 
-A header with no text (e.g. '#', as opposed to '# Header') will simply increment the key:
+A header with no proceeding inline text (e.g. '#', as opposed to '# Header') will simply increment the key:
 ```md
 # Name
 Nathan
@@ -60,7 +57,7 @@ The above becomes:
 ]
 ```
 
-For simple lists, a single dash '-' can be used to designate array items, instead of blank hashes. The following .md files are equivalent:
+For simple lists, a single dash '-' can be used to designate array items, instead of blank hashes. The following two .md files would define equivalent PHP arrays:
 ```md
 # Name
 Nathan
@@ -80,7 +77,7 @@ Nathan
 - jiu jitsu
 ```
 
-## Examples
+## Further examples
 ### Read from .md file
 Given the following .md file:
 ```md
