@@ -1,9 +1,84 @@
 # Hashdown
 Reads and writes files resembling an .md file to and from an arbitrary PHP array or object.
 
-Each header in an .md file (designated by a '#') is treated as a key in an associative array - and the content beneath each header is treated as the value of the key.
+Each header in an .md file defines a new key in an associative array, where the content beneath the header is the value of the key.
 
-H1s ('#') become top level keys, while H2s ('##') become secondary level keys, and so on. Skipping a level is not allowed.
+For example, the following .md content would yield the proceeding PHP array:
+```md
+# Name
+Nathan
+
+# Eye color
+Blue
+```
+```php
+[
+  'Name' => 'Nathan',
+  'Eye color' => 'Blue',
+]
+```
+
+H1s ('#') become top level keys, while H2s ('##') become secondary level keys, and so on:
+```md
+# Name
+## First
+Nathan
+
+## Last
+Eckberg
+```
+The above becomes:
+```php
+[
+  'Name' => [
+    'First' => 'Nathan',
+    'Last' => 'Eckberg',
+  ]
+]
+```
+Note that skipping a level is not allowed.
+
+A header with no text (e.g. '#', as opposed to '# Header') will simply increment the key:
+```md
+# Name
+Nathan
+
+# Interests
+##
+soccer
+##
+jiu jitsu
+```
+The above becomes:
+```php
+[
+  'Name' => 'Nathan',
+  'Interests' => [
+    'soccer',
+    'jiu jitsu',
+  ]
+]
+```
+
+For simple lists, a single dash '-' can be used to designate array items, instead of blank hashes. The following .md files are equivalent:
+```md
+# Name
+Nathan
+
+# Interests
+##
+soccer
+##
+jiu jitsu
+```
+```md
+# Name
+Nathan
+
+# Interests
+- soccer
+- jiu jitsu
+```
 
 ## Examples
 ### Read from .md file
