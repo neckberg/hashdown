@@ -1,32 +1,55 @@
 <?php
-// namespace Hashdown;
+namespace Neckberg\Hashdown;
 
-#
-#
-# Hashdown
-# https://github.com/neckberg/hashdown
-#
-# (c) Nathan Eckberg
-# https://github.com/neckberg
-#
-# For the full license information, view the LICENSE file that was distributed
-# with this source code.
-#
-#
+/**
+ * Hashdown class for parsing Markdown into associative arrays and vice versa.
+ *
+ * This class provides functionality to convert Markdown content into associative arrays
+ * and to generate Markdown from associative arrays or objects. It supports nested structures
+ * with headers defining the keys and content as values.
+ *
+ * @package Neckberg\Hashdown
+ * @link https://github.com/neckberg/hashdown
+ * @license MIT License https://github.com/neckberg/hashdown/blob/main/LICENSE
+ * @author Nathan Eckberg
+ */
 
 class Hashdown {
 
+  /**
+   * Writes a PHP associative array or object to a Markdown file.
+   *
+   * @param mixed $o_object The associative array or object to be written.
+   * @param string $s_file_name The file name where the Markdown will be saved.
+   * @param bool $shorthand_lists Use shorthand syntax for lists if true.
+   * @return void
+   */
   static function write_hd_to_file($o_object, String $s_file_name, Bool $shorthand_lists = true ) {
     $s_hd_markup = self::s_hd_from_obj($o_object, $shorthand_lists);
     file_put_contents($s_file_name, $s_hd_markup );
   }
 
+  /**
+   * Converts a PHP associative array or object to a Markdown string.
+   *
+   * @param mixed $o_object The associative array or object to be converted.
+   * @param bool $shorthand_lists Use shorthand syntax for lists if true.
+   * @return string The generated Markdown content.
+   */
   static function s_hd_from_obj ( $o_object, Bool $shorthand_lists = true ) {
     ob_start();
     self::echo_hd( $o_object, $shorthand_lists );
     return ob_get_clean();
   }
 
+  /**
+   * Echoes a PHP associative array or object as Markdown content.
+   *
+   * @param mixed $o_object The associative array or object to be echoed.
+   * @param bool $shorthand_lists Use shorthand syntax for lists if true.
+   * @param int $current_level The current header level for recursive nesting.
+   * @return void
+   */
   static function echo_hd ($o_object, Bool $shorthand_lists = true, Int $current_level = 1 ) {
     if ( is_object($o_object) ) {
       $o_object = json_decode(json_encode($o_object), true);
@@ -63,6 +86,12 @@ class Hashdown {
     }
   }
 
+  /**
+   * Echoes a list of values as Markdown list items.
+   *
+   * @param array $array The list of values to be echoed.
+   * @return void
+   */
   private static function echo_list ($array) {
     foreach ($array as $value) {
       echo '- ';
@@ -77,6 +106,13 @@ class Hashdown {
     }
   }
 
+  /**
+   * Echoes a scalar value, handling special characters and multiline content.
+   *
+   * @param mixed $value The value to be echoed.
+   * @param bool $in_list Indicates if the value is part of a list.
+   * @return bool Indicates if the value was multiline.
+   */
   private static function echo_scalar ($value, $in_list = false) {
     if ( $value === '' || $value === null || $value === false ) {
       echo PHP_EOL;
@@ -129,17 +165,17 @@ class Hashdown {
     return $is_multiline;
   }
 
+  /**
+   * Parses a Markdown file into a PHP associative array.
+   *
+   * @param string $file_path The path to the Markdown file.
+   * @return array|false The associative array representation of the Markdown content, or false on failure.
+   */
   static function obj_parse_hd ( String $file_path ) {
     if ( ! file_exists($file_path) ) return false;
 
-    // $a_hd_lines = file_get_contents($file_path);
-    // $a_hd_lines = file($file_path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     $a_hd_lines = file($file_path, FILE_IGNORE_NEW_LINES);
-    // $a_hd_lines = file($file_path, FILE_SKIP_EMPTY_LINES);
-    // $a_hd_lines = file($file_path);
-    // return $a_hd_lines;
     $is_in_literal = false;
-    // $i_h_level = 0;
     $o_object = [];
     $o_object_cursor = &$o_object;
     $a_key_cursor_location = [];
@@ -150,16 +186,23 @@ class Hashdown {
     $a_status = [''];
     foreach ($a_hd_lines as $i_line => $s_line) {
       $a_status = self::get_action_for_line($s_line, $a_status, $a_key_cursor_location, $i_list_depth, $o_object, $a_text_value_current);
-      // echo PHP_EOL . 'line ' . $i_line . ': ' . $a_status[0];
     }
     self::set_object_key($o_object, $a_key_cursor_location, implode(PHP_EOL, $a_text_value_current));
     $a_text_value_current = [];
-    // echo PHP_EOL;
-    // print_r($o_object);
     return $o_object;
-    // return $a_hd_lines;
   }
 
+  /**
+   * Determines the action for a line of Markdown content.
+   *
+   * @param string $s_line The line of Markdown content.
+   * @param array $a_status The current parsing status.
+   * @param array &$a_key_cursor_location The current location in the array structure.
+   * @param int &$i_list_depth The current depth of lists.
+   * @param array &$o_object The current associative array being built.
+   * @param array &$a_text_value_current The current text value being processed.
+   * @return array The updated status.
+   */
   private static function get_action_for_line (String $s_line, Array $a_status, &$a_key_cursor_location, &$i_list_depth, &$o_object, &$a_text_value_current) {
     //  if we're within a literal
     if ($a_status[0] === 'within_literal') {
@@ -234,6 +277,12 @@ class Hashdown {
     }
   }
 
+  /**
+   * Checks if a line indicates a new key in the Markdown structure.
+   *
+   * @param string $s_line The line to check.
+   * @return array An array indicating the line type, key/value, and depth.
+   */
   private static function is_line_new_key (String $s_line) {
     $s_line = ltrim($s_line);
     $a_special_chars = [
@@ -263,6 +312,13 @@ class Hashdown {
     ];
   }
 
+  /**
+   * Gets the next numeric key for an object in the array.
+   *
+   * @param array &$array The array to check.
+   * @param array $keys The current keys path.
+   * @return int The next numeric key.
+   */
   private static function get_object_next_numeric_key(&$array, $keys = []) {
     $current = &$array;
     foreach($keys as $key) {
@@ -284,6 +340,14 @@ class Hashdown {
     return $highest;
   }
 
+  /**
+   * Sets a value in the associative array at the specified key path.
+   *
+   * @param array &$array The associative array.
+   * @param array $keys The key path where the value should be set.
+   * @param mixed $value The value to set.
+   * @return void
+   */
   private static function set_object_key(&$array, $keys = [], $value = '') {
     $current = &$array;
     foreach($keys as $key) {

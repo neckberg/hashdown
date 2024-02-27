@@ -1,6 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
+use Neckberg\Hashdown\Hashdown;
 
 require_once 'bootstrap.php';
 
