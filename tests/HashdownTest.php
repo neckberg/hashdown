@@ -3,8 +3,6 @@
 use PHPUnit\Framework\TestCase;
 use Neckberg\Hashdown\Hashdown;
 
-require_once 'bootstrap.php';
-
 class HashdownTest extends TestCase {
 
   // public function test42 () {
