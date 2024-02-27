@@ -1,8 +1,6 @@
 # todo
 ## necessary
-- put into class with composer / autoloading capability
-- add phpunit tests
-- add basic readme explanation: "reads and writes files resembling an .md file to and from an arbitrary PHP array (or object)"
+- add more README.md content (e.g. for literals), and add phpunit tests for all the examples in the README file
 - refactor / add type declarations where appropriate: https://www.php.net/manual/en/language.types.declarations.php
 
 ## discretionary
@@ -14,6 +12,9 @@
 - properly print simple list items that contain literal scalar values
 - prettier line breaks for simple lists with single and multiline scalar values
 - add parameter to print "pretty" simple scalar lists (i.e. as dashes), or "ugly" ones (i.e. hashes)
+- put into class with composer / autoloading capability
+- add phpunit tests
+- add basic readme explanation: "reads and writes files resembling an .md file to and from an arbitrary PHP array (or object)"
 
 ## add composer
 ### composer init with psr-4 autoloading
