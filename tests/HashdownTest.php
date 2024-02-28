@@ -5,27 +5,37 @@ use Neckberg\Hashdown\Hashdown;
 
 class HashdownTest extends TestCase {
 
-  // public function test42 () {
-  //   $this->assertSame(42, 42, '42 must be 42');
-  //   $this->assertSame(42, '42', '42 must be 42');
-  // }
-
   public function testParseFile () {
+    $this->assertParsedMdMatchesString('blank', '');
+    $this->assertParsedMdMatchesString('single-scalar-value', 'lorem ipsum');
+    $this->assertParsedMdMatchesString('single-scalar-value-literal', '# lorem ipsum' . PHP_EOL . PHP_EOL . '## lorem ipsum' . PHP_EOL);
+
+    $this->assertParsedMdMatchesCorrespondingJson('todo-list');
+
     $this->assertParsedMdMatchesCorrespondingJson('person');
     $this->assertParsedMdMatchesCorrespondingJson('person-first-last-name');
     $this->assertParsedMdMatchesCorrespondingJson('page-builder');
-
   }
-  private function assertParsedMdMatchesCorrespondingJson(string $filename) {
-    $o_from_md = Hashdown::obj_parse_hd( __DIR__ . '/data/' . $filename . '.md' );
-    $o_from_json = json_decode( file_get_contents( __DIR__ . '/data/' . $filename . '.json'), true );
+
+  private function assertParsedMdMatchesCorrespondingJson(string $s_filename) {
+    $o_from_md = Hashdown::obj_parse_hd( __DIR__ . '/data/' . $s_filename . '.md' );
+    $o_from_json = json_decode( file_get_contents( __DIR__ . '/data/' . $s_filename . '.json'), true );
     // file_put_contents( __DIR__ . '/data/log.txt', print_r($o_from_json, 1) );
     // file_put_contents( __DIR__ . '/data/log2.txt', print_r($o_from_md, 1) );
 
     $this->assertSame(
       $o_from_json,
       $o_from_md,
-      'Array from ' . $filename . '.md should match that from ' . $filename . '.json',
+      'Array from ' . $s_filename . '.md should match that from ' . $s_filename . '.json',
+    );
+  }
+
+  private function assertParsedMdMatchesString(string $s_filename, string $s_expected_value) {
+    $o_from_md = Hashdown::obj_parse_hd( __DIR__ . '/data/' . $s_filename . '.md' );
+    $this->assertSame(
+      $s_expected_value,
+      $o_from_md,
+      'Value from ' . $s_filename . '.md should be "' . $s_expected_value . '"',
     );
   }
 
