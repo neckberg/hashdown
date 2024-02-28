@@ -2,6 +2,7 @@
 ## necessary
 - add more README.md content (e.g. for literals), and add phpunit tests for all the examples in the README file
 - refactor / add type declarations where appropriate: https://www.php.net/manual/en/language.types.declarations.php
+- submit to Packagist
 
 ## discretionary
 - add option to omit numbers for sequential hash keys (e.g. '## 0' would be written just as '##')

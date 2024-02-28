@@ -4,14 +4,14 @@ Reads and parses a strictly formatted .md file into a PHP associative array - or
 Each header in an .md file defines a new key in an associative array, where the content beneath the header is the value of the key. For example, the following .md content would yield the proceeding PHP array:
 ```md
 # Name
-Nathan
+Jane
 
 # Eye color
 Blue
 ```
 ```php
 [
-  'Name' => 'Nathan',
+  'Name' => 'Jane',
   'Eye color' => 'Blue',
 ]
 ```
@@ -20,17 +20,17 @@ H1s ('#') become top level keys, while H2s ('##') become secondary level keys, a
 ```md
 # Name
 ## First
-Nathan
+Jane
 
 ## Last
-Eckberg
+Doe
 ```
 The above becomes:
 ```php
 [
   'Name' => [
-    'First' => 'Nathan',
-    'Last' => 'Eckberg',
+    'First' => 'Jane',
+    'Last' => 'Doe',
   ]
 ]
 ```
@@ -38,7 +38,7 @@ The above becomes:
 A header with no proceeding inline text (e.g. '#', as opposed to '# Header') will simply increment the key:
 ```md
 # Name
-Nathan
+Jane
 
 # Interests
 ##
@@ -49,7 +49,7 @@ jiu jitsu
 The above becomes:
 ```php
 [
-  'Name' => 'Nathan',
+  'Name' => 'Jane',
   'Interests' => [
     'soccer',
     'jiu jitsu',
@@ -60,7 +60,7 @@ The above becomes:
 For simple lists, a single dash '-' can be used to designate array items, instead of blank hashes. The following two .md files would define equivalent PHP arrays:
 ```md
 # Name
-Nathan
+Jane
 
 # Interests
 ##
@@ -70,7 +70,7 @@ jiu jitsu
 ```
 ```md
 # Name
-Nathan
+Jane
 
 # Interests
 - soccer
@@ -84,14 +84,14 @@ Given the following .md file:
 # People
 ##
 ### Name
-Nathan
+Jane
 ### Interests
 - soccer
 - jiu jitsu
 
 ##
 ### Name
-Sara
+John
 ### Interests
 - plants
 - animals
@@ -101,12 +101,12 @@ The following declarations would be equivalent:
 $arr_from_md = Hashdown::obj_parse_hd( '/path-to-file.md' );
 $arr_from_md = [
   'People' => [
-    'Name' => 'Nathan',
+    'Name' => 'Jane',
     'Interests' => [
       'soccer',
       'jiu jitsu',
     ],
-    'Name' => 'Sara',
+    'Name' => 'John',
     'Interests' => [
       'plants',
       'animals',
@@ -116,10 +116,10 @@ $arr_from_md = [
 ```
 
 ### Write to .md file
-The php code below will produce the `Nathan.md` file shown beneath:
+The php code below will produce the `Jane.md` file shown beneath:
 ```php
 $arr_person = [
-  'Name' => 'Nathan',
+  'Name' => 'Jane',
   'Interests' => [
     'soccer',
     'jiu jitsu',
@@ -129,7 +129,7 @@ write_hd_to_file($arr_person, $arr_person . '.md');
 ```
 ```md
 # Name
-Nathan
+Jane
 
 # Interests
 - soccer
