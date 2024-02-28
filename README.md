@@ -20,7 +20,7 @@ The above .md file would produce the following PHP associative array:
 ]
 ```
 
-H1s ('#') become top level keys, while H2s ('##') become secondary level keys, and so on:
+H1s (`#`) become top level keys, while H2s (`##`) become secondary level keys, and so on:
 ```md
 # Name
 ## First
@@ -40,7 +40,7 @@ The above becomes:
 ```
 Skipping a header level is not allowed, as this would create an invalid array. Hashdown format is therefore a subset of Markdown.
 
-A header with no proceeding inline text (e.g. '#', as opposed to '# Header') will simply increment the key:
+A header with no proceeding inline text (e.g. `#`, as opposed to `# Header`) will simply increment the key:
 ```md
 # Name
 Jane
@@ -62,7 +62,7 @@ The above becomes:
 ]
 ```
 
-For simple lists, a single dash '-' can be used to designate array items, instead of blank hashes. The following two .md files would define equivalent PHP arrays:
+For simple lists, a single dash `-` can be used to designate array items, instead of blank hashes. The following two .md files would define equivalent PHP arrays:
 ```md
 # Name
 Jane
