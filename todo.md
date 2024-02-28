@@ -1,5 +1,6 @@
 # todo
 ## necessary
+- add support for md comments
 - add more README.md content (e.g. for literals), and add phpunit tests for all the examples in the README file
 - refactor / add type declarations where appropriate: https://www.php.net/manual/en/language.types.declarations.php
 - submit to Packagist

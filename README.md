@@ -114,7 +114,7 @@ some value
 ```
 </code></pre>
 
-A code block is interpreted as a 'literal'. Normally, blank lines and any leading or trailing spaces are ignored. For example, the following two files are equivalent, as the spaces and blank lines in the second file will be removed / ignored by the Hashdown parser:
+A code block is interpreted as a "literal". Normally, blank lines and any leading or trailing spaces are ignored. For example, the following two files are equivalent, as the spaces and blank lines in the second file will be removed / ignored by the Hashdown parser:
 ```md
 # key
 value
@@ -128,7 +128,7 @@ value
 value
 ```
 
-However, if placed within a code block 'literal', the spaces and blank lines will be preserved:
+However, if placed within a code block "literal", the spaces and blank lines will be preserved:
 <pre lang="md"><code>
 # key
 ```
@@ -139,8 +139,8 @@ value
 ```
 </code></pre>
 
-## Further examples
-### Read from .md file
+## Code examples
+### Read from an .md file
 Given the following .md file:
 ```md
 # People
@@ -158,9 +158,11 @@ John
 - plants
 - animals
 ```
-The following declarations would be equivalent:
+The following two snippets would be equivalent:
 ```php
 $arr_from_md = Hashdown::obj_parse_hd( '/path-to-file.md' );
+```
+```php
 $arr_from_md = [
   'People' => [
     'Name' => 'Jane',
@@ -187,7 +189,7 @@ $arr_person = [
     'jiu jitsu',
   ]
 ];
-Hashdown::write_hd_to_file($arr_person, $arr_person . '.md');
+Hashdown::write_hd_to_file($arr_person, $arr_person['Name'] . '.md');
 ```
 ```md
 # Name
