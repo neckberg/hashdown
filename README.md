@@ -91,12 +91,14 @@ with multiple lines
 ```
 
 But they can't have sub headers. The following is not allowed:
+```md
 -
 ## some key
 some value
 -
 ## some key
 some value
+```
 
 However, if you need to represent actual Markdown within your content, you can escape it within a Markdown code block (<code>```</code>). The following is valid:
 <pre lang="md"><code>
