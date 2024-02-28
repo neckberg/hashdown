@@ -40,7 +40,7 @@ The above becomes:
 ```
 Skipping a header level is not allowed, as this would create an invalid array. (Hashdown format is therefore a subset of Markdown.)
 
-A header with no proceeding inline text (e.g. `#`, as opposed to `# Header`) will simply increment the key:
+Markdown headers can also be used to produce numeric (rather than associative) arrays. A header with no inline text (e.g. a lone hash `#`, as opposed to one followed by a string `# Some Header String`) will simply increment the key:
 ```md
 # Name
 Jane
