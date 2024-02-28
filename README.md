@@ -82,6 +82,61 @@ Jane
 - jiu jitsu
 ```
 
+Dash-based simple lists can have multiple lines of data as well, for example:
+```md
+- some value
+with multiple lines
+- another value
+with multiple lines
+```
+
+But they can't have sub headers. The following is not allowed:
+-
+## some key
+some value
+-
+## some key
+some value
+
+However, if you need to represent actual Markdown within your content, you can escape it within a Markdown code block (<code>```</code>). The following is valid:
+<pre lang="md"><code>
+-
+```
+## some key
+some value
+```
+-
+```
+## some key
+some value
+```
+</code></pre>
+
+A code block is interpreted as a 'literal'. Normally, blank lines and any leading or trailing spaces are ignored. For example, the following two files are equivalent, as the spaces and blank lines in the second file will be removed / ignored by the Hashdown parser:
+```md
+# key
+value
+value
+```
+```md
+# key
+ value
+
+
+value
+```
+
+However, if placed within a code block 'literal', the spaces and blank lines will be preserved:
+<pre lang="md"><code>
+# key
+```
+ value
+
+
+value
+```
+</code></pre>
+
 ## Further examples
 ### Read from .md file
 Given the following .md file:
