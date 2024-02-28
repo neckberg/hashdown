@@ -1,5 +1,5 @@
 # Hashdown
-Markdown format is the de facto standard for technical documentation, and makes it very easy to represent any kind of information - blending code and commentary, and providing a hierarchical header structure that is easy to edit and organize, without relying on indentation or brackets. So why don't we also use it for configuration, instead of, for example, YAML or JSON?
+Markdown format is the de facto standard for technical documentation, because it makes it very easy to represent any kind of information - blending code and commentary, and providing a hierarchical header structure that is easy to edit and organize, without relying on indentation or brackets. So why don't we also use it for configuration, instead of, for example, YAML or JSON?
 
 Hashdown reads and parses a strictly formatted .md file into a PHP associative array - or writes a PHP associative array or object to a structured .md file - allowing you to seamlessly translate documentation into data.
 
