@@ -1,7 +1,9 @@
 # Hashdown
-Reads and parses a strictly formatted .md file into a PHP associative array - or writes a PHP associative array or object to a structured .md file.
+Markdown format is the de facto standard for technical documentation. So why don't we also use it for configuration, instead of, for example, YAML or JSON?
 
-Each header in an .md file defines a new key in an associative array, where the content beneath the header is the value of the key. For example, the following .md content would yield the proceeding PHP array:
+Hashdown reads and parses a strictly formatted .md file into a PHP associative array - or writes a PHP associative array or object to a structured .md file - allowing you to seamlessly translate documentation into data.
+
+Using Hashdown format, each header in an .md file represents a key in an associative array, where the content proceeding the header becomes the value of the key. For example, the following .md content would yield the PHP array below:
 ```md
 # Name
 Jane
@@ -9,6 +11,8 @@ Jane
 # Eye color
 Blue
 ```
+
+The above .md file would produce the following PHP associative array:
 ```php
 [
   'Name' => 'Jane',
@@ -16,7 +20,7 @@ Blue
 ]
 ```
 
-H1s ('#') become top level keys, while H2s ('##') become secondary level keys, and so on (note that skipping a level is not allowed):
+H1s ('#') become top level keys, while H2s ('##') become secondary level keys, and so on:
 ```md
 # Name
 ## First
@@ -34,6 +38,7 @@ The above becomes:
   ]
 ]
 ```
+Skipping a header level is not allowed, as this would create an invalid array. Hashdown format is therefore a subset of Markdown.
 
 A header with no proceeding inline text (e.g. '#', as opposed to '# Header') will simply increment the key:
 ```md
@@ -125,7 +130,7 @@ $arr_person = [
     'jiu jitsu',
   ]
 ];
-write_hd_to_file($arr_person, $arr_person . '.md');
+Hashdown::write_hd_to_file($arr_person, $arr_person . '.md');
 ```
 ```md
 # Name
@@ -137,7 +142,7 @@ Jane
 ```
 
 
-## testing
+## Testing
 - cd to the directory
 - composer install
 - run `vendor/bin/phpunit`
