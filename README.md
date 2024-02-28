@@ -3,7 +3,7 @@ Hashdown reads and parses a strictly formatted .md file into a PHP associative a
 
 Markdown format is the de facto standard for technical documentation, because it makes it very easy to represent any kind of information - blending code and commentary, and providing a hierarchical header structure that is easy to edit and organize, without relying on indentation or brackets. So why don't we also use it for configuration, instead of, for example, YAML or JSON?
 
-Using Hashdown format, each header in an .md file represents a key in an associative array, where the content proceeding the header becomes the value of the key. For example, the following .md content would yield the PHP array below:
+Using Hashdown format, each header in an .md file represents a key in an associative array, where the content proceeding the header becomes the value of the key. For example, the following .md content would yield the PHP array beneath:
 ```md
 # Name
 Jane
