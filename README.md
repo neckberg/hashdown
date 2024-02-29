@@ -1,8 +1,10 @@
 # Hashdown
 Hashdown reads and parses a strictly formatted .md file into a PHP numeric or associative array - or writes a PHP array or object to a structured .md file.
 
+## Why?
 Markdown's advantages as a documentation syntax are well recognized. But Markdown also offers advantages as a syntax for any generic data. For example, unlike YAML and JSON, Markdown's hierarchical header structure doesn't rely on indentation or brackets, making it and ideal solution for any data with multi-line values. And Markdown's code block syntax allows for easy escaping of more complex content.
 
+## How it works
 Using Hashdown format, each header in an .md file can represent a key in an associative array, where the content following and corresponding to the header can represent the value of the key. For example, the following .md content would yield the PHP array beneath:
 ```md
 # Name
