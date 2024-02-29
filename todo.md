@@ -1,6 +1,6 @@
 # todo
 ## necessary
-- add support for md comments
+- add tests and examples for nested code blocks
 - add more README.md content (e.g. for literals), and add phpunit tests for all the examples in the README file
 - refactor / add type declarations where appropriate: https://www.php.net/manual/en/language.types.declarations.php
 - submit to Packagist
@@ -9,6 +9,7 @@
 - add option to omit numbers for sequential hash keys (e.g. '## 0' would be written just as '##')
 - allow language types when opening literals (e.g. ```html...```)
 - refactor parse functions
+- add support for md comments
 
 # done
 - properly print simple list items that contain literal scalar values
