@@ -24,7 +24,7 @@ class Hashdown {
    * @param bool $b_shorthand_lists Use shorthand syntax for lists if true.
    * @return void
    */
-  static function write_to_file($x_data, string $s_file_name, bool $b_shorthand_lists = true ) {
+  static function write_to_file ($x_data, string $s_file_name, bool $b_shorthand_lists = true ) {
     $s_hd_markup = self::s_stringify_x($x_data, $b_shorthand_lists);
     file_put_contents($s_file_name, $s_hd_markup );
   }
@@ -47,41 +47,41 @@ class Hashdown {
    *
    * @param mixed $x_data The associative array or object to be echoed.
    * @param bool $b_shorthand_lists Use shorthand syntax for lists if true.
-   * @param int $current_level The current header level for recursive nesting.
+   * @param int $i_current_level The current header level for recursive nesting.
    * @return void
    */
-  static function echo_hd ($x_data, bool $b_shorthand_lists = true, Int $current_level = 1 ) {
+  static function echo_hd ($x_data, bool $b_shorthand_lists = true, int $i_current_level = 1 ) {
     if ( is_object($x_data) ) {
       $x_data = json_decode(json_encode($x_data), true);
     }
-    foreach ($x_data as $key => $value) {
-      echo str_repeat('#', $current_level) . ' ' . $key;
+    foreach ($x_data as $s_key => $x_value) {
+      echo str_repeat('#', $i_current_level) . ' ' . $s_key;
       echo PHP_EOL;
-      if ( is_object($value) ) {
-        $value = json_decode(json_encode($value), true);
+      if ( is_object($x_value) ) {
+        $x_value = json_decode(json_encode($x_value), true);
       }
-      if ( is_array($value) ) {
+      if ( is_array($x_value) ) {
         if ($b_shorthand_lists) {
-          $all_scalar_and_sequential = true;
-          $sequential_key = -1;
-          foreach ($value as $sub_key => $sub_val) {
-            if ( $sub_key === ++$sequential_key && ! is_array($sub_val) ) continue;
-            $all_scalar_and_sequential = false;
+          $b_all_scalar_and_sequential = true;
+          $i_sequential_key = -1;
+          foreach ($x_value as $s_sub_key => $x_sub_val) {
+            if ( $s_sub_key === ++$i_sequential_key && ! is_array($x_sub_val) ) continue;
+            $b_all_scalar_and_sequential = false;
             break;
           }
-          if ($all_scalar_and_sequential) {
-            self::echo_list($value);
+          if ($b_all_scalar_and_sequential) {
+            self::echo_list($x_value);
           }
           else {
-            self::echo_hd( $value, $b_shorthand_lists, $current_level + 1 );
+            self::echo_hd( $x_value, $b_shorthand_lists, $i_current_level + 1 );
           }
         }
         else {
-          self::echo_hd( $value, $b_shorthand_lists, $current_level + 1 );
+          self::echo_hd( $x_value, $b_shorthand_lists, $i_current_level + 1 );
         }
       }
       else {
-        self::echo_scalar($value);
+        self::b_echo_scalar($x_value);
       }
     }
   }
@@ -89,13 +89,13 @@ class Hashdown {
   /**
    * Echoes a list of values as Markdown list items.
    *
-   * @param array $array The list of values to be echoed.
+   * @param array $a_array The list of values to be echoed.
    * @return void
    */
-  private static function echo_list ($array) {
-    foreach ($array as $value) {
+  private static function echo_list ($a_array) {
+    foreach ($a_array as $x_value) {
       echo '- ';
-      $is_multiline = self::echo_scalar($value, true);
+      $is_multiline = self::b_echo_scalar($x_value, true);
       if ( $is_multiline) {
         echo PHP_EOL;
       }
@@ -109,57 +109,48 @@ class Hashdown {
   /**
    * Echoes a scalar value, handling special characters and multiline content.
    *
-   * @param mixed $value The value to be echoed.
-   * @param bool $in_list Indicates if the value is part of a list.
+   * @param string $s_value The value to be echoed.
+   * @param bool $is_in_list Indicates if the value is part of a list.
    * @return bool Indicates if the value was multiline.
    */
-  private static function echo_scalar ($value, $in_list = false) {
-    if ( $value === '' || $value === null || $value === false ) {
+  private static function b_echo_scalar (string $s_value, $is_in_list = false) {
+    if ( $s_value === '' || $s_value === null || $s_value === false ) {
       echo PHP_EOL;
       return;
     }
 
-    $a_values = explode(PHP_EOL, $value);
+    $a_values = explode(PHP_EOL, $s_value);
     $a_special_chars = [
       // '>' => true,
       '#' => true,
       '-' => true,
       '\\' => true,
     ];
-    $needs_to_be_literal = false;
-    foreach ($a_values as $key => $value) {
-      // echo 'value: ' . $value;
-
+    $b_needs_to_be_literal = false;
+    foreach ($a_values as $s_key => $s_value) {
       // if the line is blank, or there's whitespace on either side, we must make it literal in order to preserve it
       // otherwise, the whitespace will be removed when we parse the hashdown markup later
-      if ( $value === '' || $value !== trim($value) ) {
-        $needs_to_be_literal = true;
+      if ( $s_value === '' || $s_value !== trim($s_value) ) {
+        $b_needs_to_be_literal = true;
       }
-      if ( isset($a_special_chars[substr($value, 0, 1)]) ) {
-        $needs_to_be_literal = true;
+      if ( isset($a_special_chars[substr($s_value, 0, 1)]) ) {
+        $b_needs_to_be_literal = true;
       }
-      // if ($value === '```') {
-      //   $a_values[$key] = '`' . $value;
-      //   $needs_to_be_literal = true;
-      // }
-      // if ($needs_to_be_literal && substr($value, 0, 3) === '```') {
-      //   $a_values[$key] = '`' . $value;
-      // }
-      if ( substr($value, 0, 3) === '```' ) {
-        $a_values[$key] = '`' . $value;
-        $needs_to_be_literal = true;
+      if ( substr($s_value, 0, 3) === '```' ) {
+        $a_values[$s_key] = '`' . $s_value;
+        $b_needs_to_be_literal = true;
       }
     }
-    $is_multiline = $needs_to_be_literal || count($a_values) > 1;
-    if ($in_list && $is_multiline ) {
+    $is_multiline = $b_needs_to_be_literal || count($a_values) > 1;
+    if ($is_in_list && $is_multiline ) {
       echo PHP_EOL;
     }
-    if ($needs_to_be_literal) echo '```' . PHP_EOL;
+    if ($b_needs_to_be_literal) echo '```' . PHP_EOL;
     echo implode(PHP_EOL, $a_values) . PHP_EOL;
-    if ($needs_to_be_literal) echo '```' . PHP_EOL;
+    if ($b_needs_to_be_literal) echo '```' . PHP_EOL;
 
     // self::echo_list function will handle its own new lines
-    if ($in_list) return $is_multiline;
+    if ($is_in_list) return $is_multiline;
 
     echo PHP_EOL;
     return $is_multiline;
@@ -168,13 +159,13 @@ class Hashdown {
   /**
    * Parses a Markdown file into a PHP associative array.
    *
-   * @param string $file_path The path to the Markdown file.
+   * @param string $s_file_path The path to the Markdown file.
    * @return array|false The associative array representation of the Markdown content, or false on failure.
    */
-  static function x_read_file ( string $file_path ) {
-    if ( ! file_exists($file_path) ) return false;
+  static function x_read_file ( string $s_file_path ) {
+    if ( ! file_exists($s_file_path) ) return false;
 
-    $a_hd_lines = file($file_path, FILE_IGNORE_NEW_LINES);
+    $a_hd_lines = file($s_file_path, FILE_IGNORE_NEW_LINES);
     $is_in_literal = false;
     $x_data = [];
     $x_data_cursor = &$x_data;
@@ -185,7 +176,7 @@ class Hashdown {
     $i_list_depth = 0;
     $a_status = [''];
     foreach ($a_hd_lines as $i_line => $s_line) {
-      $a_status = self::get_action_for_line($s_line, $a_status, $a_key_cursor_location, $i_list_depth, $x_data, $a_text_value_current);
+      $a_status = self::a_get_action_for_line($s_line, $a_status, $a_key_cursor_location, $i_list_depth, $x_data, $a_text_value_current);
     }
     self::set_object_key($x_data, $a_key_cursor_location, implode(PHP_EOL, $a_text_value_current));
     $a_text_value_current = [];
@@ -203,7 +194,7 @@ class Hashdown {
    * @param array &$a_text_value_current The current text value being processed.
    * @return array The updated status.
    */
-  private static function get_action_for_line (string $s_line, Array $a_status, &$a_key_cursor_location, &$i_list_depth, &$x_data, &$a_text_value_current) {
+  private static function a_get_action_for_line (string $s_line, array $a_status, &$a_key_cursor_location, &$i_list_depth, &$x_data, &$a_text_value_current) {
     //  if we're within a literal
     if ($a_status[0] === 'within_literal') {
       if ( trim($s_line) === '```' ) return ['end_literal'];
@@ -222,7 +213,7 @@ class Hashdown {
     // if line is a comment
     if ( substr(trim($s_line), 0, 1) === '\\' ) return ['ignore', 'comment'];  // this is actually just a single, escaped backslash
 
-    $a_line_type = self::is_line_new_key($s_line);
+    $a_line_type = self::a_line_type_summary($s_line);
 
     if ( $a_line_type[0] === false ) {
       array_push($a_text_value_current, trim($s_line));
@@ -254,7 +245,7 @@ class Hashdown {
       for ($i = $i_relative_hash_depth; $i < 1; $i++) {
         array_pop($a_key_cursor_location);  // use array_slice instead: array_slice($food, 0, -3);
       }
-      array_push($a_key_cursor_location, self::get_object_next_numeric_key($x_data, $a_key_cursor_location));
+      array_push($a_key_cursor_location, self::i_get_object_next_numeric_key($x_data, $a_key_cursor_location));
       if ( $a_line_type[1] ) {
         array_push($a_text_value_current, $a_line_type[1]);
         return ['new_array'];
@@ -269,7 +260,7 @@ class Hashdown {
         array_pop($a_key_cursor_location);  // use array_slice instead: array_slice($food, 0, -3);
       }
       if ( $a_line_type[1] === '') {
-        array_push($a_key_cursor_location, self::get_object_next_numeric_key($x_data, $a_key_cursor_location));
+        array_push($a_key_cursor_location, self::i_get_object_next_numeric_key($x_data, $a_key_cursor_location));
       }
       else array_push($a_key_cursor_location, $a_line_type[1]);
 
@@ -283,7 +274,7 @@ class Hashdown {
    * @param string $s_line The line to check.
    * @return array An array indicating the line type, key/value, and depth.
    */
-  private static function is_line_new_key (string $s_line) {
+  private static function a_line_type_summary (string $s_line) {
     $s_line = ltrim($s_line);
     $a_special_chars = [
       '#' => 'object',
@@ -315,23 +306,23 @@ class Hashdown {
   /**
    * Gets the next numeric key for an object in the array.
    *
-   * @param array &$array The array to check.
-   * @param array $keys The current keys path.
+   * @param array &$a_array The array to check.
+   * @param array $a_keys The current keys path.
    * @return int The next numeric key.
    */
-  private static function get_object_next_numeric_key(&$array, $keys = []) {
-    $current = &$array;
-    foreach($keys as $key) {
-      $current = &$current[$key];
-      if ( ! is_array($current) ) {
+  private static function i_get_object_next_numeric_key (&$a_array, $a_keys = []) {
+    $a_current = &$a_array;
+    foreach($a_keys as $s_key) {
+      $a_current = &$a_current[$s_key];
+      if ( ! is_array($a_current) ) {
         // if one of the keys isn't an array, then it will be a brand new node, and so the '0' index will be available
         return 0;
       }
     }
-    if ( ! is_array($current) ) return 0;
+    if ( ! is_array($a_current) ) return 0;
 
     $highest = 0;
-    foreach ($current as $i => $dummy) {
+    foreach ($a_current as $i => $dummy) {
       if ( ! is_numeric($i) ) continue;
       if ($i >= $highest) {
         $highest = $i + 1;
@@ -343,19 +334,19 @@ class Hashdown {
   /**
    * Sets a value in the associative array at the specified key path.
    *
-   * @param array &$array The associative array.
-   * @param array $keys The key path where the value should be set.
-   * @param mixed $value The value to set.
+   * @param array &$a_array The associative array.
+   * @param array $a_keys The key path where the value should be set.
+   * @param mixed $x_value The value to set.
    * @return void
    */
-  private static function set_object_key(&$array, $keys = [], $value = '') {
-    $current = &$array;
-    foreach($keys as $key) {
-      $current = &$current[$key];
-    	if ( ! is_array($current) ) {
-    		$current = [];
+  private static function set_object_key (&$a_array, $a_keys = [], $x_value = '') {
+    $a_current = &$a_array;
+    foreach($a_keys as $s_key) {
+      $a_current = &$a_current[$s_key];
+    	if ( ! is_array($a_current) ) {
+    		$a_current = [];
     	}
     }
-    $current = $value;
+    $a_current = $x_value;
   }
 }
