@@ -164,7 +164,7 @@ John
 ```
 The following two snippets would be equivalent:
 ```php
-$arr_from_md = Hashdown::obj_parse_hd( '/path-to-file.md' );
+$arr_from_md = Hashdown::x_read_file( '/path-to-file.md' );
 ```
 ```php
 $arr_from_md = [
@@ -193,7 +193,7 @@ $arr_person = [
     'jiu jitsu',
   ]
 ];
-Hashdown::write_hd_to_file($arr_person, $arr_person['Name'] . '.md');
+Hashdown::write_to_file($arr_person, $arr_person['Name'] . '.md');
 ```
 ```md
 # Name

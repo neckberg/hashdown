@@ -19,49 +19,49 @@ class Hashdown {
   /**
    * Writes a PHP associative array or object to a Markdown file.
    *
-   * @param mixed $o_object The associative array or object to be written.
+   * @param mixed $x_data The associative array or object to be written.
    * @param string $s_file_name The file name where the Markdown will be saved.
-   * @param bool $shorthand_lists Use shorthand syntax for lists if true.
+   * @param bool $b_shorthand_lists Use shorthand syntax for lists if true.
    * @return void
    */
-  static function write_hd_to_file($o_object, String $s_file_name, Bool $shorthand_lists = true ) {
-    $s_hd_markup = self::s_hd_from_obj($o_object, $shorthand_lists);
+  static function write_to_file($x_data, string $s_file_name, bool $b_shorthand_lists = true ) {
+    $s_hd_markup = self::s_stringify_x($x_data, $b_shorthand_lists);
     file_put_contents($s_file_name, $s_hd_markup );
   }
 
   /**
    * Converts a PHP associative array or object to a Markdown string.
    *
-   * @param mixed $o_object The associative array or object to be converted.
-   * @param bool $shorthand_lists Use shorthand syntax for lists if true.
+   * @param mixed $x_data The associative array or object to be converted.
+   * @param bool $b_shorthand_lists Use shorthand syntax for lists if true.
    * @return string The generated Markdown content.
    */
-  static function s_hd_from_obj ( $o_object, Bool $shorthand_lists = true ) {
+  static function s_stringify_x ( $x_data, bool $b_shorthand_lists = true ) {
     ob_start();
-    self::echo_hd( $o_object, $shorthand_lists );
+    self::echo_hd( $x_data, $b_shorthand_lists );
     return ob_get_clean();
   }
 
   /**
    * Echoes a PHP associative array or object as Markdown content.
    *
-   * @param mixed $o_object The associative array or object to be echoed.
-   * @param bool $shorthand_lists Use shorthand syntax for lists if true.
+   * @param mixed $x_data The associative array or object to be echoed.
+   * @param bool $b_shorthand_lists Use shorthand syntax for lists if true.
    * @param int $current_level The current header level for recursive nesting.
    * @return void
    */
-  static function echo_hd ($o_object, Bool $shorthand_lists = true, Int $current_level = 1 ) {
-    if ( is_object($o_object) ) {
-      $o_object = json_decode(json_encode($o_object), true);
+  static function echo_hd ($x_data, bool $b_shorthand_lists = true, Int $current_level = 1 ) {
+    if ( is_object($x_data) ) {
+      $x_data = json_decode(json_encode($x_data), true);
     }
-    foreach ($o_object as $key => $value) {
+    foreach ($x_data as $key => $value) {
       echo str_repeat('#', $current_level) . ' ' . $key;
       echo PHP_EOL;
       if ( is_object($value) ) {
         $value = json_decode(json_encode($value), true);
       }
       if ( is_array($value) ) {
-        if ($shorthand_lists) {
+        if ($b_shorthand_lists) {
           $all_scalar_and_sequential = true;
           $sequential_key = -1;
           foreach ($value as $sub_key => $sub_val) {
@@ -73,11 +73,11 @@ class Hashdown {
             self::echo_list($value);
           }
           else {
-            self::echo_hd( $value, $shorthand_lists, $current_level + 1 );
+            self::echo_hd( $value, $b_shorthand_lists, $current_level + 1 );
           }
         }
         else {
-          self::echo_hd( $value, $shorthand_lists, $current_level + 1 );
+          self::echo_hd( $value, $b_shorthand_lists, $current_level + 1 );
         }
       }
       else {
@@ -171,13 +171,13 @@ class Hashdown {
    * @param string $file_path The path to the Markdown file.
    * @return array|false The associative array representation of the Markdown content, or false on failure.
    */
-  static function obj_parse_hd ( String $file_path ) {
+  static function x_read_file ( string $file_path ) {
     if ( ! file_exists($file_path) ) return false;
 
     $a_hd_lines = file($file_path, FILE_IGNORE_NEW_LINES);
     $is_in_literal = false;
-    $o_object = [];
-    $o_object_cursor = &$o_object;
+    $x_data = [];
+    $x_data_cursor = &$x_data;
     $a_key_cursor_location = [];
     $i_object_key_current = -1;
     $s_object_key_current = '';
@@ -185,11 +185,11 @@ class Hashdown {
     $i_list_depth = 0;
     $a_status = [''];
     foreach ($a_hd_lines as $i_line => $s_line) {
-      $a_status = self::get_action_for_line($s_line, $a_status, $a_key_cursor_location, $i_list_depth, $o_object, $a_text_value_current);
+      $a_status = self::get_action_for_line($s_line, $a_status, $a_key_cursor_location, $i_list_depth, $x_data, $a_text_value_current);
     }
-    self::set_object_key($o_object, $a_key_cursor_location, implode(PHP_EOL, $a_text_value_current));
+    self::set_object_key($x_data, $a_key_cursor_location, implode(PHP_EOL, $a_text_value_current));
     $a_text_value_current = [];
-    return $o_object;
+    return $x_data;
   }
 
   /**
@@ -199,11 +199,11 @@ class Hashdown {
    * @param array $a_status The current parsing status.
    * @param array &$a_key_cursor_location The current location in the array structure.
    * @param int &$i_list_depth The current depth of lists.
-   * @param array &$o_object The current associative array being built.
+   * @param array &$x_data The current associative array being built.
    * @param array &$a_text_value_current The current text value being processed.
    * @return array The updated status.
    */
-  private static function get_action_for_line (String $s_line, Array $a_status, &$a_key_cursor_location, &$i_list_depth, &$o_object, &$a_text_value_current) {
+  private static function get_action_for_line (string $s_line, Array $a_status, &$a_key_cursor_location, &$i_list_depth, &$x_data, &$a_text_value_current) {
     //  if we're within a literal
     if ($a_status[0] === 'within_literal') {
       if ( trim($s_line) === '```' ) return ['end_literal'];
@@ -232,7 +232,7 @@ class Hashdown {
     // if we made it this far, it means we're about to make a new node
     // if there was any scalar data, we should save it to the waning node before making the new node
     if ($a_text_value_current) {
-      self::set_object_key($o_object, $a_key_cursor_location, implode(PHP_EOL, $a_text_value_current));
+      self::set_object_key($x_data, $a_key_cursor_location, implode(PHP_EOL, $a_text_value_current));
       $a_text_value_current = [];
     }
 
@@ -254,7 +254,7 @@ class Hashdown {
       for ($i = $i_relative_hash_depth; $i < 1; $i++) {
         array_pop($a_key_cursor_location);  // use array_slice instead: array_slice($food, 0, -3);
       }
-      array_push($a_key_cursor_location, self::get_object_next_numeric_key($o_object, $a_key_cursor_location));
+      array_push($a_key_cursor_location, self::get_object_next_numeric_key($x_data, $a_key_cursor_location));
       if ( $a_line_type[1] ) {
         array_push($a_text_value_current, $a_line_type[1]);
         return ['new_array'];
@@ -269,7 +269,7 @@ class Hashdown {
         array_pop($a_key_cursor_location);  // use array_slice instead: array_slice($food, 0, -3);
       }
       if ( $a_line_type[1] === '') {
-        array_push($a_key_cursor_location, self::get_object_next_numeric_key($o_object, $a_key_cursor_location));
+        array_push($a_key_cursor_location, self::get_object_next_numeric_key($x_data, $a_key_cursor_location));
       }
       else array_push($a_key_cursor_location, $a_line_type[1]);
 
@@ -283,7 +283,7 @@ class Hashdown {
    * @param string $s_line The line to check.
    * @return array An array indicating the line type, key/value, and depth.
    */
-  private static function is_line_new_key (String $s_line) {
+  private static function is_line_new_key (string $s_line) {
     $s_line = ltrim($s_line);
     $a_special_chars = [
       '#' => 'object',

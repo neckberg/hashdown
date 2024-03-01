@@ -19,7 +19,7 @@ class HashdownTest extends TestCase {
   }
 
   private function assertParsedMdMatchesCorrespondingJson(string $s_filename) {
-    $o_from_md = Hashdown::obj_parse_hd( __DIR__ . '/data/' . $s_filename . '.md' );
+    $o_from_md = Hashdown::x_read_file( __DIR__ . '/data/' . $s_filename . '.md' );
     $o_from_json = json_decode( file_get_contents( __DIR__ . '/data/' . $s_filename . '.json'), true );
     // file_put_contents( __DIR__ . '/data/log_' . $s_filename . '_json.txt', print_r($o_from_json, 1) );
     // file_put_contents( __DIR__ . '/data/log_' . $s_filename . '_md.txt', print_r($o_from_md, 1) );
@@ -32,7 +32,7 @@ class HashdownTest extends TestCase {
   }
 
   private function assertParsedMdMatchesString(string $s_filename, string $s_expected_value) {
-    $o_from_md = Hashdown::obj_parse_hd( __DIR__ . '/data/' . $s_filename . '.md' );
+    $o_from_md = Hashdown::x_read_file( __DIR__ . '/data/' . $s_filename . '.md' );
     $this->assertSame(
       $s_expected_value,
       $o_from_md,
@@ -42,7 +42,7 @@ class HashdownTest extends TestCase {
 
   public function testGenerateString () {
     $o_from_json = json_decode( file_get_contents( __DIR__ . '/data/page-builder.json'), true );
-    $s_from_array = Hashdown::s_hd_from_obj($o_from_json, true );
+    $s_from_array = Hashdown::s_stringify_x($o_from_json, true );
     $s_from_file = file_get_contents( __DIR__ . '/data/page-builder.md');
     // file_put_contents( __DIR__ . '/data/log_' . $s_filename . '_md.txt', print_r($o_from_md, 1) );
 
@@ -51,16 +51,5 @@ class HashdownTest extends TestCase {
       trim($s_from_array),
       'Hashdown string generated from associative array should match that from existing .md file',
     );
-
-    // $o_object = [
-    //   'name' => [
-    //     'first' => 'first name',
-    //     'last' => 'last name'
-    //   ],
-    //   'address' => ['123', 'maple street'],
-    // ];
-    // $o_object = obj_parse_hd( __DIR__ . '/example-page.md' );
-    // write_hd_to_file($o_object, __DIR__ . '/example-page-printed.md', true );
-    // echo s_hd_from_obj($o_object, false);
   }
 }
