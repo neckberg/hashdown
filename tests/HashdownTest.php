@@ -11,6 +11,7 @@ class HashdownTest extends TestCase {
     $this->assertParsedMdMatchesString('single-scalar-value-literal', '# lorem ipsum' . PHP_EOL . PHP_EOL . '## lorem ipsum' . PHP_EOL);
 
     $this->assertParsedMdMatchesCorrespondingJson('todo-list');
+    $this->assertParsedMdMatchesCorrespondingJson('list-of-paragraphs');
 
     $this->assertParsedMdMatchesCorrespondingJson('person');
     $this->assertParsedMdMatchesCorrespondingJson('person-first-last-name');
@@ -20,8 +21,8 @@ class HashdownTest extends TestCase {
   private function assertParsedMdMatchesCorrespondingJson(string $s_filename) {
     $o_from_md = Hashdown::obj_parse_hd( __DIR__ . '/data/' . $s_filename . '.md' );
     $o_from_json = json_decode( file_get_contents( __DIR__ . '/data/' . $s_filename . '.json'), true );
-    // file_put_contents( __DIR__ . '/data/log.txt', print_r($o_from_json, 1) );
-    // file_put_contents( __DIR__ . '/data/log2.txt', print_r($o_from_md, 1) );
+    // file_put_contents( __DIR__ . '/data/log_' . $s_filename . '_json.txt', print_r($o_from_json, 1) );
+    // file_put_contents( __DIR__ . '/data/log_' . $s_filename . '_md.txt', print_r($o_from_md, 1) );
 
     $this->assertSame(
       $o_from_json,
@@ -43,8 +44,7 @@ class HashdownTest extends TestCase {
     $o_from_json = json_decode( file_get_contents( __DIR__ . '/data/page-builder.json'), true );
     $s_from_array = Hashdown::s_hd_from_obj($o_from_json, true );
     $s_from_file = file_get_contents( __DIR__ . '/data/page-builder.md');
-    // file_put_contents( __DIR__ . '/data/log.txt', $s_from_array );
-    // file_put_contents( __DIR__ . '/data/log2.txt', $s_from_file );
+    // file_put_contents( __DIR__ . '/data/log_' . $s_filename . '_md.txt', print_r($o_from_md, 1) );
 
     $this->assertSame(
       trim($s_from_file),

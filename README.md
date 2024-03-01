@@ -2,7 +2,7 @@
 Hashdown reads and parses a strictly formatted .md file into a PHP numeric or associative array - or writes a PHP array or object to a structured .md file.
 
 ## Why?
-Markdown's advantages as a documentation syntax are well recognized - but Markdown also offers advantages as a syntax for arbitrary data. For example, unlike YAML and JSON, Markdown's hierarchical header structure doesn't rely on indentation or brackets - making it a more ideal solution when editing data with multi-line values. And Markdown's code block syntax allows for easy escaping of more complex content.
+Markdown's advantages as a documentation syntax are well recognized - but Markdown also offers advantages for representing arbitrary data. For example, unlike YAML and JSON, Markdown's hierarchical header structure doesn't rely on indentation or brackets - making it a more ideal solution when editing data with multi-line values. And Markdown's code block syntax allows for easy escaping of more complex content.
 
 ## How it works
 In Hashdown format, each header in an .md file represents a key in an associative array, where the content following and corresponding to the header represents the value of the key. For example, the following .md content would yield the PHP array beneath:
@@ -40,9 +40,9 @@ The above becomes:
   ]
 ]
 ```
-Skipping a header level is not allowed, as this would create an invalid array. (Hashdown format is therefore a subset of Markdown.)
+Skipping a header level (e.g. jumping from `#` to `###`) is not allowed, as this would create an invalid array.
 
-Markdown headers can also be used to produce numeric (rather than associative) arrays. A header with no inline text (e.g. a lone hash `#`, as opposed to one followed by a string `# Some Header String`) will simply increment the key:
+Markdown headers can also be used to produce numeric (rather than associative) arrays. A header with no inline text (e.g. a lone hash `#`, as opposed to one followed by a string `# Some Header / Key String`) will simply increment the key:
 ```md
 # Name
 Jane
@@ -86,9 +86,11 @@ Jane
 
 Dash-based simple lists can have multiple lines of data as well, for example:
 ```md
-- some value
+-
+some value
 with multiple lines
-- another value
+-
+another value
 with multiple lines
 ```
 
