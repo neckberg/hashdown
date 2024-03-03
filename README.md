@@ -143,6 +143,20 @@ value
 ```
 </code></pre>
 
+Literals can be nested within literals. Each level of nesting is designated with an additional tick mark (<code>`</code>):
+```
+This is a literal
+
+````
+this is a nested literal
+
+`````
+this is a doubly nested literal
+
+`````
+````
+```
+
 ## Code examples
 ### Read from an .md file
 Given the following .md file:
