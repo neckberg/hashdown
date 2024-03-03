@@ -54,35 +54,27 @@ class Hashdown {
     if ( is_object($x_data) ) {
       $x_data = json_decode(json_encode($x_data), true);
     }
+    if ( ! is_array($x_data) ) {
+      self::b_echo_scalar($x_data);
+      return;
+    }
+    if ($b_shorthand_lists) {
+      $b_all_scalar_and_sequential = true;
+      $i_sequential_key = -1;
+      foreach ($x_data as $s_key => $x_value) {
+        if ( $s_key === ++$i_sequential_key && ! is_array($x_value) ) continue;
+        $b_all_scalar_and_sequential = false;
+        break;
+      }
+    }
+    if ($b_all_scalar_and_sequential ?? false) {
+      self::echo_list($x_data);
+      return;
+    }
     foreach ($x_data as $s_key => $x_value) {
       echo str_repeat('#', $i_current_level) . ' ' . $s_key;
       echo PHP_EOL;
-      if ( is_object($x_value) ) {
-        $x_value = json_decode(json_encode($x_value), true);
-      }
-      if ( is_array($x_value) ) {
-        if ($b_shorthand_lists) {
-          $b_all_scalar_and_sequential = true;
-          $i_sequential_key = -1;
-          foreach ($x_value as $s_sub_key => $x_sub_val) {
-            if ( $s_sub_key === ++$i_sequential_key && ! is_array($x_sub_val) ) continue;
-            $b_all_scalar_and_sequential = false;
-            break;
-          }
-          if ($b_all_scalar_and_sequential) {
-            self::echo_list($x_value);
-          }
-          else {
-            self::echo_hd( $x_value, $b_shorthand_lists, $i_current_level + 1 );
-          }
-        }
-        else {
-          self::echo_hd( $x_value, $b_shorthand_lists, $i_current_level + 1 );
-        }
-      }
-      else {
-        self::b_echo_scalar($x_value);
-      }
+      self::echo_hd( $x_value, $b_shorthand_lists, $i_current_level + 1 );
     }
   }
 
@@ -92,9 +84,9 @@ class Hashdown {
    * @param array $a_array The list of values to be echoed.
    * @return void
    */
-  private static function echo_list ($a_array) {
+  private static function echo_list (array $a_array) {
     foreach ($a_array as $x_value) {
-      echo '- ';
+      echo '-';
       $is_multiline = self::b_echo_scalar($x_value, true);
       if ( $is_multiline) {
         echo PHP_EOL;
@@ -142,8 +134,8 @@ class Hashdown {
       }
     }
     $is_multiline = $b_needs_to_be_literal || count($a_values) > 1;
-    if ($is_in_list && $is_multiline ) {
-      echo PHP_EOL;
+    if ($is_in_list) {
+      echo $is_multiline ? PHP_EOL : ' ';  // add either a space or a newline after the list dash
     }
     if ($b_needs_to_be_literal) echo '```' . PHP_EOL;
     echo implode(PHP_EOL, $a_values) . PHP_EOL;
