@@ -1,4 +1,6 @@
-[
-  "laundry",
-  "groceries"
-]
+{
+  "todo": [
+    "laundry",
+    "groceries"
+  ]
+}
