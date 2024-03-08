@@ -1,12 +1,12 @@
 # todo
 ## necessary
-- add tests and examples for nested code blocks
+- reverse nested code block tick syntax. the outside container should have the most ticks: [For fenced code blocks, the prescription is more backticks.](https://meta.stackexchange.com/questions/82718/how-do-i-escape-a-backtick-within-in-line-code-in-markdown)
 - add more README.md content (e.g. for literals), and add phpunit tests for all the examples in the README file
 - refactor / add type declarations where appropriate: https://www.php.net/manual/en/language.types.declarations.php
 - submit to Packagist
 
 ## discretionary
-- add option to omit numbers for sequential hash keys (e.g. '## 0' would be written just as '##')
+- add `$b_omit_sequential_keys` or `$b_omit_keys_for_numeric_arrays` parameter to omit numbers for sequential hash keys (e.g. '## 0' would be written just as '##')
 - allow language types when opening literals (e.g. ```html...```)
 - refactor parse functions
 - add support for md comments
