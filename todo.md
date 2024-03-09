@@ -1,6 +1,6 @@
 # todo
 ## necessary
-- refactor tests to make use of /tmp directory
+- refactor tests to make use of /tmp directory and remove obsolete data files
 - reverse nested code block tick syntax. the outside container should have the most ticks: [For fenced code blocks, the prescription is more backticks.](https://meta.stackexchange.com/questions/82718/how-do-i-escape-a-backtick-within-in-line-code-in-markdown)
 - add more README.md content (e.g. for literals), and add phpunit tests for all the examples in the README file
 - refactor / add type declarations where appropriate: https://www.php.net/manual/en/language.types.declarations.php

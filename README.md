@@ -104,8 +104,8 @@ some value
 some value
 ```
 
-However, if you need to represent actual Markdown within your content, you can escape it within a Markdown code block (<code>```</code>). The following is valid:
-<pre lang="md"><code>
+However, if you need to represent actual Markdown within your content, you can escape it within a Markdown code block, designated by three or more tick marks (<code>\`\`\`</code>). The following is valid:
+````md
 -
 ```
 ## some key
@@ -116,7 +116,7 @@ some value
 ## some key
 some value
 ```
-</code></pre>
+````
 
 A code block is interpreted as a "literal". Normally, blank lines and any leading or trailing spaces are ignored. For example, the following two files are equivalent, as the spaces and blank lines in the second file will be removed / ignored by the Hashdown parser:
 ```md
@@ -133,7 +133,7 @@ value
 ```
 
 However, if placed within a code block "literal", the spaces and blank lines will be preserved:
-<pre lang="md"><code>
+````md
 # key
 ```
  value
@@ -141,23 +141,24 @@ However, if placed within a code block "literal", the spaces and blank lines wil
 
 value
 ```
-</code></pre>
+````
 
-Literals can be nested within literals. Each level of nesting is designated with an additional tick mark (<code>\`</code>):
-<pre lang="md"><code>
-```
-# This is a literal, designated by 3 tick marks
+Literals can be nested within literals. The outer-most layer must have the most tick marks. If a literal is initiated with 5 tick marks, anything goes until the next line with 5 tick marks:
+``````md
+`````
+# This is a literal initiated with 5 tick marks
 
 ````
 # this is a nested literal, designated by 4 tick marks
 
-`````
-# this is a doubly nested literal, designated by 5 tick marks
-
-`````
-````
 ```
-</code></pre>
+# this is a doubly nested literal, designated by 3 tick marks
+
+```
+````
+`````
+# This is outside the literal, since the line above has 5 tick marks
+``````
 
 ## Code examples
 ### Read from an .md file
