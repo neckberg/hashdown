@@ -39,7 +39,7 @@ class Hashdown {
   static function s_stringify_x ( $x_data, bool $b_shorthand_lists = true ) {
     ob_start();
     self::echo_hd( $x_data, $b_shorthand_lists );
-    return ob_get_clean();
+    return trim(ob_get_clean()) . PHP_EOL;
   }
 
   /**
