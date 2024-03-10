@@ -81,10 +81,10 @@ class Hashdown {
       self::echo_list($x_data);
       return;
     }
-    $omit_keys = ($b_omit_numeric_array_keys && $b_all_sequential);
+    $b_omit_keys = ($b_omit_numeric_array_keys && $b_all_sequential);
     foreach ($x_data as $s_key => $x_value) {
       echo str_repeat('#', $i_current_level);
-      if ( ! $omit_keys ) {
+      if ( ! $b_omit_keys ) {
         echo ' ' . $s_key;
       }
       echo PHP_EOL;
