@@ -21,12 +21,13 @@ class Hashdown {
    *
    * @param mixed $x_data The associative array or object to be written.
    * @param string $s_file_name The file name where the Markdown will be saved.
+   * @param bool $b_omit_numeric_array_keys Omit explicit key values for sequential numeric arrays if true.
    * @param bool $b_shorthand_lists Use shorthand syntax for lists if true.
    * @return void
    */
-  static function write_to_file ($x_data, string $s_file_name, bool $b_shorthand_lists = true ) {
-    $s_hd_markup = self::s_stringify_x($x_data, $b_shorthand_lists);
-    file_put_contents($s_file_name, $s_hd_markup );
+  static function write_to_file ($x_data, string $s_file_name, bool $b_shorthand_lists = true, bool $b_omit_numeric_array_keys = true) {
+    $s_hd_markup = self::s_stringify_x($x_data, $b_shorthand_lists, $b_omit_numeric_array_keys);
+    file_put_contents($s_file_name, $s_hd_markup);
   }
 
   /**
@@ -34,11 +35,12 @@ class Hashdown {
    *
    * @param mixed $x_data The associative array or object to be converted.
    * @param bool $b_shorthand_lists Use shorthand syntax for lists if true.
+   * @param bool $b_omit_numeric_array_keys Omit explicit key values for sequential numeric arrays if true.
    * @return string The generated Markdown content.
    */
-  static function s_stringify_x ( $x_data, bool $b_shorthand_lists = true ) {
+  static function s_stringify_x ( $x_data, bool $b_shorthand_lists = true, bool $b_omit_numeric_array_keys = true ) {
     ob_start();
-    self::echo_hd( $x_data, $b_shorthand_lists );
+    self::echo_hd( $x_data, $b_shorthand_lists, $b_omit_numeric_array_keys);
     return trim(ob_get_clean()) . PHP_EOL;
   }
 
@@ -47,10 +49,11 @@ class Hashdown {
    *
    * @param mixed $x_data The associative array or object to be echoed.
    * @param bool $b_shorthand_lists Use shorthand syntax for lists if true.
+   * @param bool $b_omit_numeric_array_keys Omit explicit key values for sequential numeric arrays if true.
    * @param int $i_current_level The current header level for recursive nesting.
    * @return void
    */
-  static function echo_hd ($x_data, bool $b_shorthand_lists = true, int $i_current_level = 1 ) {
+  static function echo_hd ($x_data, bool $b_shorthand_lists = true, bool $b_omit_numeric_array_keys = true, int $i_current_level = 1 ) {
     if ( is_object($x_data) ) {
       $x_data = json_decode(json_encode($x_data), true);
     }
@@ -58,23 +61,34 @@ class Hashdown {
       self::b_echo_scalar($x_data);
       return;
     }
-    if ($b_shorthand_lists) {
-      $b_all_scalar_and_sequential = true;
+    if ($b_shorthand_lists || $b_omit_numeric_array_keys) {
+      $b_all_scalar = true;
+      $b_all_sequential = true;
       $i_sequential_key = -1;
       foreach ($x_data as $s_key => $x_value) {
-        if ( $s_key === ++$i_sequential_key && ! is_array($x_value) ) continue;
-        $b_all_scalar_and_sequential = false;
-        break;
+        if ( $s_key !== ++$i_sequential_key ) {
+          $b_all_sequential = false;
+          break;
+        }
+        if ( ! $b_shorthand_lists) continue;
+        if ( is_array($x_value) ) {
+          $b_all_scalar = false;
+          break;
+        }
       }
     }
-    if ($b_all_scalar_and_sequential ?? false) {
+    if ($b_shorthand_lists && $b_all_scalar && $b_all_sequential) {
       self::echo_list($x_data);
       return;
     }
+    $omit_keys = ($b_omit_numeric_array_keys && $b_all_sequential);
     foreach ($x_data as $s_key => $x_value) {
-      echo str_repeat('#', $i_current_level) . ' ' . $s_key;
+      echo str_repeat('#', $i_current_level);
+      if ( ! $omit_keys ) {
+        echo ' ' . $s_key;
+      }
       echo PHP_EOL;
-      self::echo_hd( $x_value, $b_shorthand_lists, $i_current_level + 1 );
+      self::echo_hd( $x_value, $b_shorthand_lists, $b_omit_numeric_array_keys, $i_current_level + 1 );
     }
   }
 

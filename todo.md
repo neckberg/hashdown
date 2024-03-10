@@ -7,7 +7,6 @@
 - submit to Packagist
 
 ## discretionary
-- add `$b_omit_sequential_keys` or `$b_omit_keys_for_numeric_arrays` parameter to omit numbers for sequential hash keys (e.g. '## 0' would be written just as '##')
 - allow language types when opening literals (e.g. ```html...```)
 - refactor parse functions
 - add support for md comments
@@ -19,6 +18,7 @@
 - put into class with composer / autoloading capability
 - add phpunit tests
 - add basic readme explanation: "reads and writes files resembling an .md file to and from an arbitrary PHP array (or object)"
+- add `$b_omit_sequential_keys` or `$b_omit_keys_for_numeric_arrays` parameter to omit numbers for sequential hash keys (e.g. '## 0' would be written just as '##')
 
 ## add composer
 ### composer init with psr-4 autoloading

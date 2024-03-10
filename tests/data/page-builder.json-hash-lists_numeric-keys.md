@@ -8,7 +8,7 @@ About
 /about
 
 # content blocks
-##
+## 0
 ### width
 8
 
@@ -16,7 +16,7 @@ About
 parent block
 
 ### child blocks
-####
+#### 0
 ##### width
 4
 
@@ -42,7 +42,7 @@ Dolor sit amet...
 ###### text
 Learn more
 
-####
+#### 1
 ##### width
 4
 
@@ -66,7 +66,7 @@ https://example.com
 ###### text
 Learn more
 
-####
+#### 2
 ##### width
 4
 
@@ -92,7 +92,7 @@ Dolor sit amet...
 ###### text
 Learn more
 
-####
+#### 3
 ##### width
 12
 
@@ -103,7 +103,7 @@ wysiwyg
 Lorem ipsum dolor
 Sit amet conspectitur
 
-####
+#### 4
 ##### width
 12
 
@@ -114,16 +114,16 @@ blog preview
 3
 
 ##### categories
-######
+###### 0
 news
 
-######
+###### 1
 events
 
-######
+###### 2
 spotlight
 
-##
+## 1
 ### width
 4
 
