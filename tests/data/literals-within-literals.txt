@@ -1,7 +1,7 @@
 outside of literal
 inside literal
 
-````
+````md
 # literal within literal
 ```
 lorem ipsum
