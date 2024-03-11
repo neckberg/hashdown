@@ -133,6 +133,7 @@ class Hashdown {
       '\\' => true,
     ];
     $b_needs_to_be_literal = false;
+    $i_literal_size = 3;
     foreach ($a_values as $s_key => $s_value) {
       // if the line is blank, or there's whitespace on either side, we must make it literal in order to preserve it
       // otherwise, the whitespace will be removed when we parse the hashdown markup later
@@ -142,8 +143,9 @@ class Hashdown {
       if ( isset($a_special_chars[substr($s_value, 0, 1)]) ) {
         $b_needs_to_be_literal = true;
       }
-      if ( substr($s_value, 0, 3) === '```' ) {
-        $a_values[$s_key] = '`' . $s_value;
+      $i_literal_signature = self::i_leading_target_character_count('`', $s_value);
+      if ($i_literal_signature > $i_literal_size) {
+        $i_literal_size = $i_literal_signature + 1;
         $b_needs_to_be_literal = true;
       }
     }
@@ -151,15 +153,32 @@ class Hashdown {
     if ($is_in_list) {
       echo $is_multiline ? PHP_EOL : ' ';  // add either a space or a newline after the list dash
     }
-    if ($b_needs_to_be_literal) echo '```' . PHP_EOL;
+    if ($b_needs_to_be_literal) echo str_repeat('`', $i_literal_size) . PHP_EOL;
     echo implode(PHP_EOL, $a_values) . PHP_EOL;
-    if ($b_needs_to_be_literal) echo '```' . PHP_EOL;
+    if ($b_needs_to_be_literal) echo str_repeat('`', $i_literal_size) . PHP_EOL;
 
     // self::echo_list function will handle its own new lines
     if ($is_in_list) return $is_multiline;
 
     echo PHP_EOL;
     return $is_multiline;
+  }
+
+  /**
+   * Calculates the number of consecutive occurrences of a specific character at the start of a string.
+   *
+   * @param string $s_character The target character to count occurrences of at the beginning of the string.
+   * @param string $s The string to search within for the target character.
+   * @return int The number of consecutive occurrences of the target character at the start of the string.
+   *             If the target character is not found, returns the length of the string.
+   */
+  private static function i_leading_target_character_count(string $s_character, string $s) {
+    for ($i = 0; $i < strlen($s); $i++) {
+      if ($s[$i] !== $s_character) {
+        return $i;
+      }
+    }
+    return strlen($s);
   }
 
   /**
@@ -187,23 +206,6 @@ class Hashdown {
     self::set_object_key($x_data, $a_key_cursor_location, implode(PHP_EOL, $a_text_value_current));
     $a_text_value_current = [];
     return $x_data;
-  }
-
-  /**
-   * Calculates the number of consecutive occurrences of a specific character at the start of a string.
-   *
-   * @param string $s_character The target character to count occurrences of at the beginning of the string.
-   * @param string $s The string to search within for the target character.
-   * @return int The number of consecutive occurrences of the target character at the start of the string.
-   *             If the target character is not found, returns the length of the string.
-   */
-  private static function i_leading_target_character_count(string $s_character, string $s) {
-    for ($i = 0; $i < strlen($s); $i++) {
-      if ($s[$i] !== $s_character) {
-        return $i;
-      }
-    }
-    return strlen($s);
   }
 
   /**

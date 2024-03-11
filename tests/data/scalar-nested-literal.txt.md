@@ -1,14 +1,14 @@
-```
+`````
 # outside literal
 
 ````
 # inside literal
-`````
+```
 # nested literal
 
 ## lorem ipsum
 
 content...
-`````
-````
 ```
+````
+`````
