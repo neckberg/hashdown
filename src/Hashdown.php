@@ -190,6 +190,23 @@ class Hashdown {
   }
 
   /**
+   * Calculates the number of consecutive occurrences of a specific character at the start of a string.
+   *
+   * @param string $s_character The target character to count occurrences of at the beginning of the string.
+   * @param string $s The string to search within for the target character.
+   * @return int The number of consecutive occurrences of the target character at the start of the string.
+   *             If the target character is not found, returns the length of the string.
+   */
+  private static function i_leading_target_character_count(string $s_character, string $s) {
+    for ($i = 0; $i < strlen($s); $i++) {
+      if ($s[$i] !== $s_character) {
+        return $i;
+      }
+    }
+    return strlen($s);
+  }
+
+  /**
    * Determines the action for a line of Markdown content.
    *
    * @param string $s_line The line of Markdown content.
@@ -201,17 +218,15 @@ class Hashdown {
    * @return array The updated status.
    */
   private static function a_get_action_for_line (string $s_line, array $a_status, &$a_key_cursor_location, &$i_list_depth, &$x_data, &$a_text_value_current) {
-    //  if we're within a literal
+
+    //  handle literals
+    $i_literal_signature = self::i_leading_target_character_count('`', $s_line);
     if ($a_status[0] === 'within_literal') {
-      if ( trim($s_line) === '```' ) return ['end_literal'];
-      if ( substr($s_line, 0, 4) === '````' ) {
-        array_push($a_text_value_current, substr($s_line, 1) );
-        return ['within_literal'];
-      }
+      if ($i_literal_signature === $a_status[1]) return ['end_literal'];
       array_push($a_text_value_current, $s_line);
-      return ['within_literal'];
+      return $a_status;
     }
-    if ( trim($s_line) === '```' ) return ['within_literal'];
+    if ($i_literal_signature > 2) return ['within_literal', $i_literal_signature];
 
     // always ignore whitespace if not within literal
     if ( trim($s_line) === '' ) return ['ignore', 'whitespace'];
