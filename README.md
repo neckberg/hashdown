@@ -44,7 +44,7 @@ The above becomes:
 ```
 Skipping a header level (e.g. jumping from `#` to `###`) is not allowed, as this would create an invalid array.
 
-Markdown headers can also be used to produce sequential (rather than associative) arrays. A header with no inline text (e.g. a lone hash `#`, as opposed to one followed by a string, e.g. `# Some Header / Key String`) will simply increment the key. The two files below are equivalent, and correspond with the PHP array beneath:
+Markdown headers can also be used to produce sequential (rather than associative) arrays. A header with no inline text (e.g. a lone hash `#`, as opposed to one followed by a string, e.g. `# Some Header / Key String`) will simply increment the key. The two documents below are equivalent, and correspond with the PHP array beneath:
 ```md
 # Ingredients
 ##
@@ -73,20 +73,27 @@ enriched flour
 ]
 ```
 
-Simple lists - like those above, where all of the values are scalar - a shorthand "dash" (`-`), syntax can be used in place of hashes (`#`). The following .md file is equivalent to the two above:
+For simple lists - like those above, where all of the values are scalar - a shorthand "dash" (`-`), syntax can be used in place of hashes (`#`). The following .md document is equivalent to the two above:
 ```md
 # Ingredients
 - sugar
 - water
 - enriched flour
 ```
-The dash must be followed by either a space or a line break, but can accept multiple lines of data. The following is allowed:
+The dash must be followed by either a space or a line break, but can accept multiple lines of data. The following is allowed, and will produce the PHP array beneath:
 ```md
-- first line...
-...second line
+- first line,
+second line
+
 -
-another value
+another list item
 with multiple lines
+```
+```php
+[
+  'first line,\nsecond line',
+  'another list item\nwith multiple lines'
+]
 ```
 
 But dash lists can't contain sub headers. The following is not allowed:
@@ -117,24 +124,24 @@ A Markdown code block is interpreted as a "literal". Normally, blank lines and a
 ```md
 # key
 some text
-some text
+some more text
 ```
 ```md
 # key
- some text
+  some text
 
 
-some text
+some more text
 ```
 
-However, if placed within a code block "literal", the spaces and blank lines will be preserved:
+However, if placed within a code block "literal", the leading spaces and blank lines will be preserved:
 ````md
 # key
 ```
- some text
+  some text
 
 
-some text
+some more text
 ```
 ````
 
