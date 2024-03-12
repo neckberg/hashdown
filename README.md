@@ -125,7 +125,7 @@ another value
 ```
 ````
 
-A Markdown code block is interpreted as a "literal". Normally, blank lines and any leading or trailing spaces are ignored. For example, the following two files are equivalent, as the spaces and blank lines in the second file will be removed / ignored by the Hashdown parser:
+Normally, blank lines and any leading or trailing spaces are ignored. For example, the following two files are equivalent, as the spaces and blank lines in the second file will be removed / ignored by the Hashdown parser:
 ```md
 # key
 some text
@@ -139,7 +139,7 @@ some more text
 some more text
 ```
 
-However, if placed within a code block "literal", the leading spaces and blank lines will be preserved:
+However, if placed within a "literal" block, the leading spaces and blank lines will be preserved:
 ````md
 # key
 ```
