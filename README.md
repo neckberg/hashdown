@@ -169,7 +169,12 @@ Literals can be nested within literals. The outer-most layer must have the most 
 
 ## Code examples
 ### Read from an .md file
-Given the following .md document:
+Use `Hashdown::x_read_file( '/path-to-file.md' )` to read from an .md file:
+```php
+use Neckberg\Hashdown\Hashdown;
+$x_data_from_md = Hashdown::x_read_file( '/path-to-file.md' );
+```
+Given the following .md document, the above code would set the `$x_data_from_md` to the PHP array shown beneath:
 ```md
 # Foods
 ##
@@ -188,12 +193,8 @@ Diet Coke
 - caramel color
 - aspartame
 ```
-The following two PHP snippets would be equivalent:
 ```php
-$x_data_from_md = Hashdown::x_read_file( '/path-to-file.md' );
-```
-```php
-$x_data_from_md = [
+[
   'Foods' => [
     'Name' => 'Twinkie',
     'Ingredients' => [
@@ -212,9 +213,13 @@ $x_data_from_md = [
 ```
 
 ### Write to .md file
-The php code below will produce the `Jane.md` file shown beneath:
+
+Use `Hashdown::write_to_file( $php_array_or_scalar, '/path-to-file.md' )` to write to an .md file:
+
+The php code below will produce the `Twinkie.md` file shown beneath:
 ```php
-$x_food = [
+use Neckberg\Hashdown\Hashdown;
+$x_twinkie = [
   'Name' => 'Twinkie',
   'Ingredients' => [
     'sugar',
@@ -222,7 +227,7 @@ $x_food = [
     'enriched flour',
   ]
 ];
-Hashdown::write_to_file($x_food, $arr_person['Name'] . '.md');
+Hashdown::write_to_file($x_twinkie, $x_twinkie['Name'] . '.md');
 ```
 ```md
 # Name
