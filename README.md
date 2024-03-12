@@ -125,7 +125,7 @@ another value
 ```
 ````
 
-Normally, blank lines and any leading or trailing spaces are ignored. For example, the following two files are equivalent, as the spaces and blank lines in the second file will be removed / ignored by the Hashdown parser:
+Normally, blank lines and any leading or trailing spaces are ignored. For example, the following two documents are equivalent, as the spaces and blank lines in the second document will be removed / ignored by the Hashdown parser:
 ```md
 # key
 some text
@@ -169,39 +169,43 @@ Literals can be nested within literals. The outer-most layer must have the most 
 
 ## Code examples
 ### Read from an .md file
-Given the following .md file:
+Given the following .md document:
 ```md
-# People
+# Foods
 ##
 ### Name
-Jane
-### Interests
-- soccer
-- jiu jitsu
+Twinkie
+### Ingredients
+- sugar
+- water
+- enriched flour
 
 ##
 ### Name
-John
-### Interests
-- plants
-- animals
+Diet Coke
+### Ingredients
+- carbonated water
+- caramel color
+- aspartame
 ```
-The following two snippets would be equivalent:
+The following two PHP snippets would be equivalent:
 ```php
-$arr_from_md = Hashdown::x_read_file( '/path-to-file.md' );
+$x_data_from_md = Hashdown::x_read_file( '/path-to-file.md' );
 ```
 ```php
-$arr_from_md = [
-  'People' => [
-    'Name' => 'Jane',
-    'Interests' => [
-      'soccer',
-      'jiu jitsu',
+$x_data_from_md = [
+  'Foods' => [
+    'Name' => 'Twinkie',
+    'Ingredients' => [
+      'sugar',
+      'water',
+      'enriched flour',
     ],
-    'Name' => 'John',
-    'Interests' => [
-      'plants',
-      'animals',
+    'Name' => 'Diet Coke',
+    'Ingredients' => [
+      'carbonated water',
+      'caramel color',
+      'aspartame',
     ],
   ]
 ];
@@ -210,24 +214,25 @@ $arr_from_md = [
 ### Write to .md file
 The php code below will produce the `Jane.md` file shown beneath:
 ```php
-$arr_person = [
-  'Name' => 'Jane',
-  'Interests' => [
-    'soccer',
-    'jiu jitsu',
+$x_food = [
+  'Name' => 'Twinkie',
+  'Ingredients' => [
+    'sugar',
+    'water',
+    'enriched flour',
   ]
 ];
-Hashdown::write_to_file($arr_person, $arr_person['Name'] . '.md');
+Hashdown::write_to_file($x_food, $arr_person['Name'] . '.md');
 ```
 ```md
 # Name
-Jane
+Twinkie
 
-# Interests
-- soccer
-- jiu jitsu
+# Ingredients
+- sugar
+- water
+- enriched flour
 ```
-
 
 ## Testing
 - cd to the directory
