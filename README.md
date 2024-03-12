@@ -5,141 +5,133 @@ Hashdown reads and parses a strictly formatted .md file into a PHP numeric or as
 Markdown's advantages as a documentation syntax are well recognized - but Markdown also offers advantages for representing arbitrary data. For example, unlike YAML and JSON, Markdown's hierarchical header structure doesn't rely on indentation or brackets - making it a more ideal solution when editing data with multi-line values. And Markdown's code block syntax allows for easy escaping of more complex content.
 
 ## How it works
-In Hashdown format, each header in an .md file represents a key in an associative array, where the content following and corresponding to the header represents the value of the key. For example, the following .md content would yield the PHP array beneath:
+In Hashdown format, each header in an .md file represents a key in an associative array, where the content following and corresponding to the header represents the value of the key. For example, the following .md content would yield the PHP associative array beneath:
 ```md
-# Name
-Jane
+# Name of Food
+Twinkie
 
-# Eye color
-Blue
+# Calories per serving
+157
 ```
-
-The above .md file would produce the following PHP associative array:
 ```php
 [
-  'Name' => 'Jane',
-  'Eye color' => 'Blue',
+  'Name of Food' => 'Twinkie',
+  'Calories per serving' => 157,
 ]
 ```
 
 H1s (`#`) become top level keys, while H2s (`##`) become secondary level keys, and so on:
 ```md
-# Name
-## First
-Jane
+# Quantity
+## Amount
+2
 
-## Last
-Doe
+## Unit
+Tablespoons
 ```
 The above becomes:
 ```php
 [
-  'Name' => [
-    'First' => 'Jane',
-    'Last' => 'Doe',
+  'Quantity' => [
+    'Amount' => '2',
+    'Unit' => 'Tablespoons',
   ]
 ]
 ```
 Skipping a header level (e.g. jumping from `#` to `###`) is not allowed, as this would create an invalid array.
 
-Markdown headers can also be used to produce numeric (rather than associative) arrays. A header with no inline text (e.g. a lone hash `#`, as opposed to one followed by a string `# Some Header / Key String`) will simply increment the key:
+Markdown headers can also be used to produce numeric (rather than associative) arrays. A header with no inline text (e.g. a lone hash `#`, as opposed to one followed by a string `# Some Header / Key String`) will simply increment the key. The two files below are equivalent:
 ```md
-# Name
-Jane
-
-# Interests
+# Ingredients
 ##
-soccer
+sugar
 ##
-jiu jitsu
+water
+##
+enriched flour
 ```
-The above becomes:
+```md
+# Ingredients
+## 0
+sugar
+## 1
+water
+## 2
+enriched flour
+```
+The two examples above both represent the following PHP array structure:
 ```php
 [
-  'Name' => 'Jane',
-  'Interests' => [
-    'soccer',
-    'jiu jitsu',
+  'Ingredients' => [
+    'sugar',
+    'water',
+    'enriched flour',
   ]
 ]
 ```
 
-For simple lists, a single dash `-` can be used to designate array items, instead of blank hashes. The following two .md files would define equivalent PHP arrays:
+Simple lists - like those above, where all of the values are scalar - a shorthand "dash" (`-`), syntax can be used in place of hashes (`#`). The following .md file is equivalent to the two above:
 ```md
-# Name
-Jane
-
-# Interests
-##
-soccer
-##
-jiu jitsu
+# Ingredients
+- sugar
+- water
+- enriched flour
 ```
+The dash must be followed by either a space or a line break, but can accept multiple lines of data. The following is allowed:
 ```md
-# Name
-Jane
-
-# Interests
-- soccer
-- jiu jitsu
-```
-
-Dash-based simple lists can have multiple lines of data as well, for example:
-```md
--
-some value
-with multiple lines
+- first line...
+...second line
 -
 another value
 with multiple lines
 ```
 
-But they can't have sub headers. The following is not allowed:
+But dash lists can't contain sub headers. The following is not allowed:
 ```md
 -
-## some key
+## a second level key
 some value
 -
-## some key
-some value
+## another key
+another value
 ```
 
 However, if you need to represent actual Markdown within your content, you can escape it within a Markdown code block, designated by three or more tick marks (<code>\`\`\`</code>). The following is valid:
 ````md
 -
 ```
-## some key
+## a second level key
 some value
 ```
 -
 ```
-## some key
-some value
+## another key
+another value
 ```
 ````
 
-A code block is interpreted as a "literal". Normally, blank lines and any leading or trailing spaces are ignored. For example, the following two files are equivalent, as the spaces and blank lines in the second file will be removed / ignored by the Hashdown parser:
+A Markdown code block is interpreted as a "literal". Normally, blank lines and any leading or trailing spaces are ignored. For example, the following two files are equivalent, as the spaces and blank lines in the second file will be removed / ignored by the Hashdown parser:
 ```md
 # key
-value
-value
+some text
+some text
 ```
 ```md
 # key
- value
+ some text
 
 
-value
+some text
 ```
 
 However, if placed within a code block "literal", the spaces and blank lines will be preserved:
 ````md
 # key
 ```
- value
+ some text
 
 
-value
+some text
 ```
 ````
 
