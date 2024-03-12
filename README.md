@@ -44,7 +44,9 @@ The above becomes:
 ```
 Skipping a header level (e.g. jumping from `#` to `###`) is not allowed, as this would create an invalid array.
 
-Markdown headers can also be used to produce sequential (rather than associative) arrays. A header with no inline text (e.g. a lone hash `#`, as opposed to one followed by a string, e.g. `# Some Header / Key String`) will simply increment the key. The two documents below are equivalent, and correspond with the PHP array beneath:
+
+### Lists and Sequential arrays
+Markdown headers can also be used to produce sequential (rather than associative) arrays. A header with no inline text (e.g. a lone hash `#`) will simply increment the key. The two documents below are equivalent, and correspond with the PHP array beneath:
 ```md
 # Ingredients
 ##
@@ -106,7 +108,10 @@ some value
 another value
 ```
 
-However, if you need to represent actual Markdown within your content, you can escape it within a Markdown code block, designated by three or more tick marks (<code>\`\`\`</code>). The following is valid:
+However, if you need to represent actual Markdown within your content, you can escape it using Markdown's code block syntax.
+
+### Literals and Code blocks
+A "literal" or "code block" section is designated by three or more tick marks (<code>\`\`\`</code>). The following is valid:
 ````md
 -
 ```
