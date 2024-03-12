@@ -10,31 +10,35 @@ In Hashdown format, each header in an .md file represents a key in an associativ
 # Name of Food
 Twinkie
 
+# Serving size
+2 cakes
+
 # Calories per serving
-157
+280
 ```
 ```php
 [
   'Name of Food' => 'Twinkie',
-  'Calories per serving' => 157,
+  'Serving size' => 2 cakes,
+  'Calories per serving' => 280,
 ]
 ```
 
 H1s (`#`) become top level keys, while H2s (`##`) become secondary level keys, and so on:
 ```md
-# Quantity
+# Serving size
 ## Amount
 2
 
 ## Unit
-Tablespoons
+Cakes
 ```
 The above becomes:
 ```php
 [
-  'Quantity' => [
+  'Serving size' => [
     'Amount' => '2',
-    'Unit' => 'Tablespoons',
+    'Unit' => 'Cakes',
   ]
 ]
 ```
