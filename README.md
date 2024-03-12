@@ -5,7 +5,7 @@ Hashdown reads and parses a strictly formatted .md file into a PHP numeric or as
 Markdown's advantages as a documentation syntax are well recognized - but Markdown also offers advantages for representing arbitrary data. For example, unlike YAML and JSON, Markdown's hierarchical header structure doesn't rely on indentation or brackets - making it a more ideal solution when editing data with multi-line values. And Markdown's code block syntax allows for easy escaping of more complex content.
 
 ## How it works
-In Hashdown format, each header in an .md file represents a key in an associative array, where the content following and corresponding to the header represents the value of the key. For example, the following .md content would yield the PHP associative array beneath:
+In Hashdown format, each header in an a Markdown document represents a key in an associative array, where the content following and corresponding to the header represents the value of the key. For example, the following .md content would yield the PHP associative array beneath:
 ```md
 # Name of Food
 Twinkie
@@ -44,7 +44,7 @@ The above becomes:
 ```
 Skipping a header level (e.g. jumping from `#` to `###`) is not allowed, as this would create an invalid array.
 
-Markdown headers can also be used to produce numeric (rather than associative) arrays. A header with no inline text (e.g. a lone hash `#`, as opposed to one followed by a string `# Some Header / Key String`) will simply increment the key. The two files below are equivalent:
+Markdown headers can also be used to produce sequential (rather than associative) arrays. A header with no inline text (e.g. a lone hash `#`, as opposed to one followed by a string, e.g. `# Some Header / Key String`) will simply increment the key. The two files below are equivalent, and correspond with the PHP array beneath:
 ```md
 # Ingredients
 ##
@@ -63,7 +63,6 @@ water
 ## 2
 enriched flour
 ```
-The two examples above both represent the following PHP array structure:
 ```php
 [
   'Ingredients' => [
