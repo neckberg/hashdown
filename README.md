@@ -2,10 +2,10 @@
 Hashdown reads and parses a strictly formatted .md file into a PHP numeric or associative array - or writes a PHP array or object to a structured .md file.
 
 ## Why?
-Markdown's advantages as a documentation syntax are well recognized - but Markdown also offers advantages for representing arbitrary data. For example, unlike YAML and JSON, Markdown's hierarchical header structure doesn't rely on indentation or brackets - making it a more ideal solution when editing data with multi-line values. And Markdown's code block syntax allows for easy escaping of more complex content.
+Markdown's advantages as a documentation syntax are well recognized - but Markdown also offers advantages for serializing and editing arbitrary data. For example, unlike YAML and JSON, Markdown's hierarchical header structure doesn't rely on indentation or brackets - making it a more ideal solution when editing data with multi-line values. And Markdown's code block syntax allows for easy escaping of more complex content.
 
 ## How it works
-In Hashdown format, each header in an a Markdown document represents a key in an associative array, where the content following and corresponding to the header represents the value of the key. For example, the following .md content would yield the PHP associative array beneath:
+In Hashdown format, each header in a Markdown document represents a key in an associative array, where the content following and corresponding to the header represents the value of the key. For example, the following .md content would yield the PHP associative array beneath:
 ```md
 # Name of Food
 Twinkie
@@ -75,7 +75,7 @@ enriched flour
 ]
 ```
 
-For simple lists - like those above, where all of the values are scalar - a shorthand "dash" (`-`), syntax can be used in place of hashes (`#`). The following .md document is equivalent to the two above:
+For simple lists (like those above, where all of the values are scalar) a shorthand "dash" (`-`), syntax can be used in place of hashes (`#`). The following .md document is equivalent to the two above:
 ```md
 # Ingredients
 - sugar
@@ -125,7 +125,7 @@ another value
 ```
 ````
 
-Normally, blank lines and any leading or trailing spaces are ignored. For example, the following two documents are equivalent, as the spaces and blank lines in the second document will be removed / ignored by the Hashdown parser:
+Normally, blank lines and leading or trailing spaces are ignored. For example, the following two documents are equivalent, as the spaces and blank lines in the second document will be removed / ignored by the Hashdown parser:
 ```md
 # key
 some text
@@ -168,14 +168,14 @@ Literals can be nested within literals. The outer-most layer must have the most 
 ``````
 
 ## Code examples
-### Read from an .md file
-Use `Hashdown::x_read_file( '/path-to-file.md' )` to read from an .md file:
+### Reading from an .md file
+Use Hashdown's static `x_read_file` method to read from / deserialize an .md file:
 ```php
 use Neckberg\Hashdown\Hashdown;
 
 $x_data_from_md = Hashdown::x_read_file( '/path-to-file.md' );
 ```
-Given the following .md document, the above code would set the `$x_data_from_md` to the PHP array shown beneath:
+Given the following .md document, the above code would set `$x_data_from_md` to the PHP array shown beneath:
 ```md
 # Foods
 ##
@@ -213,9 +213,8 @@ Diet Coke
 ];
 ```
 
-### Write to .md file
-
-Use `Hashdown::write_to_file( $php_array_or_scalar, '/path-to-file.md' )` to write to an .md file:
+### Writing to an .md file
+Use Hashdown's static `write_to_file` method to write to an .md file.
 
 The php code below will produce the `Twinkie.md` file shown beneath:
 ```php
@@ -240,6 +239,48 @@ Twinkie
 - water
 - enriched flour
 ```
+
+By default, `write_to_file` will use the shorthand "dash" lists and sequential "blank" hash headers when possible, but this behavior can be changed via the third and fourth parameters:
+- $b_omit_numeric_array_keys, bool: Omit explicit key values for sequential numeric arrays if true.
+- $b_shorthand_lists, bool: Use shorthand syntax for lists if true.
+
+Assuming the same `$x_twinkie` variable defined above, the following calls will produce the output beneath:
+```php
+Hashdown::write_to_file($x_twinkie, $x_twinkie['Name'] . '.md', false, true);
+```
+```md
+# Name
+Twinkie
+
+# Ingredients
+##
+sugar
+
+##
+water
+
+##
+enriched flour
+```
+
+```php
+Hashdown::write_to_file($x_twinkie, $x_twinkie['Name'] . '.md', false, false);
+```
+```md
+# Name
+Twinkie
+
+# Ingredients
+## 0
+sugar
+
+## 1
+water
+
+## 2
+enriched flour
+```
+
 
 ## Testing
 - cd to the directory
