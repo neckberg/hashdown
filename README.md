@@ -216,7 +216,7 @@ Diet Coke
 ### Writing to an .md file
 Use Hashdown's static `write_to_file` method to write to an .md file.
 
-The php code below will produce the `Twinkie.md` file shown beneath:
+The php code below will produce a `Twinkie.md` file with the content shown beneath:
 ```php
 use Neckberg\Hashdown\Hashdown;
 
@@ -240,9 +240,9 @@ Twinkie
 - enriched flour
 ```
 
-By default, `write_to_file` will use the shorthand "dash" lists and sequential "blank" hash headers when possible, but this behavior can be changed via the third and fourth parameters:
-- $b_omit_numeric_array_keys, bool: Omit explicit key values for sequential numeric arrays if true.
-- $b_shorthand_lists, bool: Use shorthand syntax for lists if true.
+By default, `write_to_file` will use the shorthand "dash" lists and sequential "blank" hash headers when possible (as shown above). But this behavior can be changed via the 3rd and 4th parameters:
+- `b_shorthand_lists`, bool: Use shorthand syntax for lists if true.
+- `b_omit_numeric_array_keys`, bool: Omit explicit key values for sequential numeric arrays if true.
 
 Assuming the same `$x_twinkie` variable defined above, the following calls will produce the output beneath:
 ```php

@@ -21,8 +21,8 @@ class Hashdown {
    *
    * @param mixed $x_data The associative array or object to be written.
    * @param string $s_file_name The file name where the Markdown will be saved.
-   * @param bool $b_omit_numeric_array_keys Omit explicit key values for sequential numeric arrays if true.
    * @param bool $b_shorthand_lists Use shorthand syntax for lists if true.
+   * @param bool $b_omit_numeric_array_keys Omit explicit key values for sequential numeric arrays if true.
    * @return void
    */
   static function write_to_file ($x_data, string $s_file_name, bool $b_shorthand_lists = true, bool $b_omit_numeric_array_keys = true) {
