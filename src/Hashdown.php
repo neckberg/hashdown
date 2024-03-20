@@ -19,7 +19,7 @@ class Hashdown {
   /**
    * Writes a PHP associative array or object to a Markdown file.
    *
-   * @param mixed $x_data The associative array or object to be written.
+   * @param mixed $x_data The associative array, object, or scalar to be written.
    * @param string $s_file_name The file name where the Markdown will be saved.
    * @param bool $b_shorthand_lists Use shorthand syntax for lists if true.
    * @param bool $b_omit_numeric_array_keys Omit explicit key values for sequential numeric arrays if true.
@@ -27,7 +27,9 @@ class Hashdown {
    */
   static function write_to_file ($x_data, string $s_file_name, bool $b_shorthand_lists = true, bool $b_omit_numeric_array_keys = true) {
     $s_hd_markup = self::s_stringify_x($x_data, $b_shorthand_lists, $b_omit_numeric_array_keys);
-    file_put_contents($s_file_name, $s_hd_markup);
+    if ( file_put_contents($s_file_name, $s_hd_markup) === false ) {
+      throw new \Exception('Failed to write to file ' . $s_file_name . '. Check permissions and file path.');
+    }
   }
 
   /**
@@ -188,7 +190,9 @@ class Hashdown {
    * @return array|false The associative array representation of the Markdown content, or false on failure.
    */
   static function x_read_file ( string $s_file_path ) {
-    if ( ! file_exists($s_file_path) ) return false;
+    if ( ! file_exists($s_file_path) ) {
+      throw new \Exception('Failed to open non-existent file: ' . $s_file_path);
+    }
 
     $a_hd_lines = file($s_file_path, FILE_IGNORE_NEW_LINES);
     $is_in_literal = false;
@@ -201,7 +205,7 @@ class Hashdown {
     $i_list_depth = 0;
     $a_status = [''];
     foreach ($a_hd_lines as $i_line => $s_line) {
-      $a_status = self::a_get_action_for_line($s_line, $a_status, $a_key_cursor_location, $i_list_depth, $x_data, $a_text_value_current);
+      $a_status = self::a_get_action_for_line($s_line, $a_status, $a_key_cursor_location, $i_list_depth, $x_data, $a_text_value_current, $i_line, $s_file_path);
     }
     self::set_object_key($x_data, $a_key_cursor_location, implode(PHP_EOL, $a_text_value_current));
     $a_text_value_current = [];
@@ -217,9 +221,11 @@ class Hashdown {
    * @param int &$i_list_depth The current depth of lists.
    * @param array &$x_data The current associative array being built.
    * @param array &$a_text_value_current The current text value being processed.
+   * @param int $i_line The current line number of the file being processed.
+   * @param string $s_file_path The path to the file being processed.
    * @return array The updated status.
    */
-  private static function a_get_action_for_line (string $s_line, array $a_status, &$a_key_cursor_location, &$i_list_depth, &$x_data, &$a_text_value_current) {
+  private static function a_get_action_for_line (string $s_line, array $a_status, &$a_key_cursor_location, &$i_list_depth, &$x_data, &$a_text_value_current, int $i_line, string $s_file_path) {
 
     //  handle literals
     $i_literal_signature = self::i_leading_target_character_count('`', $s_line);
@@ -262,7 +268,10 @@ class Hashdown {
     }
 
     if ( $a_line_type[0] === 'array' ) {
-      if ( $a_line_type[2] > $i_max_list_depth ) return ['error', 'invalid_list_depth'];
+      if ( $a_line_type[2] > $i_max_list_depth ) {
+        throw new \Exception('Invalid node depth: cannot begin node of depth ' . $a_line_type[2] . ' from with a list of depth ' . $i_max_hash_depth - 1 . '. See line ' . $i_line + 1 . ' of ' . $s_file_path . ': ' . $s_line);
+      }
+
       $i_relative_hash_depth = $a_line_type[2] - $i_list_depth;
       $i_list_depth = $a_line_type[2];
       for ($i = $i_relative_hash_depth; $i < 1; $i++) {
@@ -277,7 +286,9 @@ class Hashdown {
     }
     $i_list_depth = 0;
     if ( $a_line_type[0] === 'object' ) {
-      if ( $a_line_type[2] > $i_max_hash_depth ) return ['error', 'invalid_hash_depth'];
+      if ( $a_line_type[2] > $i_max_hash_depth ) {
+        throw new \Exception('Invalid node depth: cannot begin node of depth ' . $a_line_type[2] . ' from with a node of depth ' . $i_max_hash_depth - 1 . '. See line ' . $i_line + 1 . ' of ' . $s_file_path . ': ' . $s_line);
+      }
       $i_relative_hash_depth = $a_line_type[2] - count($a_key_cursor_location);
       for ($i = $i_relative_hash_depth; $i < 1; $i++) {
         array_pop($a_key_cursor_location);  // use array_slice instead: array_slice($food, 0, -3);

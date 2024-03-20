@@ -99,4 +99,21 @@ class HashdownTest extends TestCase {
         return [$s_name, $s_extension];
     }
   }
+
+  public function testReadNonexistentFile () {
+    $this->assertThrowExceptionOnRead('<nonexistent filename>', 'Failed to open non-existent file');
+  }
+  public function testBadListDepth () {
+    $this->assertThrowExceptionOnRead('bad-list-depth', 'Invalid node depth: cannot begin node of depth 3 from with a node of depth 1. See line 4 of /Users/nathan.eckberg/local-sites/php/app/public/hashdown/tests/data/bad-list-depth.md: ###');
+  }
+  public function testBadHashDepth () {
+    $this->assertThrowExceptionOnRead('bad-hash-depth', 'Invalid node depth: cannot begin node of depth 3 from with a node of depth 1. See line 2 of /Users/nathan.eckberg/local-sites/php/app/public/hashdown/tests/data/bad-hash-depth.md: ### 0');
+  }
+  public function assertThrowExceptionOnRead (string $s_filename, string $s_message = '') {
+    $this->expectException(\Exception::class);
+    if ($s_message) {
+      $this->expectExceptionMessage($s_message);
+    }
+    $x_from_md = Hashdown::x_read_file( __DIR__ . '/data/' . $s_filename . '.md' );
+  }
 }
