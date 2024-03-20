@@ -239,8 +239,8 @@ class Hashdown {
     // always ignore whitespace if not within literal
     if ( trim($s_line) === '' ) return ['ignore', 'whitespace'];
 
-    // if line is a comment
-    if ( substr(trim($s_line), 0, 1) === '\\' ) return ['ignore', 'comment'];  // this is actually just a single, escaped backslash
+    // // if line is a comment
+    // if ( substr(trim($s_line), 0, 1) === '\\' ) return ['ignore', 'comment'];  // this is actually just a single, escaped backslash
 
     $a_line_type = self::a_line_type_summary($s_line);
 
