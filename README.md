@@ -75,14 +75,15 @@ enriched flour
 ]
 ```
 
-For simple lists (like those above, where all of the values are scalar) a shorthand "dash" (`-`), syntax can be used in place of hashes (`#`). The following .md document is equivalent to the two above:
+For list items with scalar values (like those shown above), a shorthand "dash" (`-`), syntax can be used instead of hashes (`#`). The following .md document is equivalent to the two above:
 ```md
 # Ingredients
 - sugar
 - water
 - enriched flour
 ```
-The dash must be followed by either a space or a line break, but can accept multiple lines of data. The following is allowed, and will produce the PHP array beneath:
+
+"Dash" style list values can span multiple lines. The following list is valid and equivalent to the PHP array shown beneath:
 ```md
 - first line,
 second line
@@ -98,19 +99,35 @@ with multiple lines
 ]
 ```
 
-But dash lists can't contain sub headers. The following is not allowed:
+But non-scalar values must fall under a "hash" style header. The first example below is valid, but the second is not, as the desired data structure can become ambiguous:
+```md
+#
+## Name
+Twinkie
+## Ingredients
+- sugar
+- water
+
+#
+## Name
+Diet Coke
+```
 ```md
 -
-## a second level key
-some value
+## Name
+Twinkie
+## Ingredients
+- sugar
+- water
+
 -
-## another key
-another value
+## Name
+Diet Coke
 ```
 
-However, if you need to represent actual Markdown within your content, you can escape it using Markdown's code block syntax.
-
 ### Literals and Code blocks
+If you need to represent Markdown as scalar content within your .md document, you can escape it using Markdown's code block syntax.
+
 A "literal" or "code block" section is designated by three or more tick marks (<code>\`\`\`</code>). The following is valid:
 ````md
 -

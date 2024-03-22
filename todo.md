@@ -1,10 +1,11 @@
 # todo
 ## necessary
-- refactor tests to make use of /tmp directory and remove obsolete data files
 - add more README.md content (e.g. for literals), and add phpunit tests for all the examples in the README file
 - submit to Packagist
 
 ## discretionary
+- node depth errors: fix edge cases and exception message node depth and underlying code
+- remove Neckberg from namespace?
 - refactor parse functions
 - add support for md comments. actually, I think there is support. Just need to add tests, or change how it works if desired
 
