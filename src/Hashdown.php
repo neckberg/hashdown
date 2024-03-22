@@ -250,8 +250,8 @@ class Hashdown {
     }
 
     // if we made it this far, it means we're about to make a new node
-    // if there was any scalar data, we should save it to the waning node before making the new node
-    if ($a_text_value_current) {
+    // save off the waning node before making the new one
+    if ($a_key_cursor_location) {
       self::set_object_key($x_data, $a_key_cursor_location, implode(PHP_EOL, $a_text_value_current));
       $a_text_value_current = [];
     }
