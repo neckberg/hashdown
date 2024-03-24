@@ -7,7 +7,7 @@ class HashdownTest extends TestCase {
 
   // public function testNewCase () {
   //   $x_from_md = Hashdown::x_read_file( __DIR__ . '/data/0_src.md');
-  //   Hashdown::write_to_file($x_from_md, __DIR__ . '/data/0_tgt.md');
+  //   Hashdown::write_to_file($x_from_md, __DIR__ . '/data/0_tgt.md', true, false);
   //   file_put_contents( __DIR__ . '/data/0_tgt.json', json_encode($x_from_md, JSON_PRETTY_PRINT) );
   //   $this->assertSame('hello', 'hello', 'not the same');
   // }

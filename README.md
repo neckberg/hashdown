@@ -126,23 +126,23 @@ Diet Coke
 ```
 
 ### Literals and Code blocks
+#### Escaping embedded Markdown syntax
 If you need to represent Markdown as scalar content within your .md document, you can escape it using Markdown's code block syntax.
 
-A "literal" or "code block" section is designated by three or more tick marks (<code>\`\`\`</code>). The following is valid:
+A "literal" or "code block" section is designated by three or more tick marks (<code>\`\`\`</code>). The `data` key below has a child node called `author`, while the `content` node is just a string of Markdown text:
 ````md
--
+# data
+## title
+A Tale of Two Cities
+# content
 ```
-## a second level key
-some value
-```
--
-```
-## another key
-another value
+# Chapter 1
+It was the best of times...
 ```
 ````
 
-Normally, blank lines and leading or trailing spaces are ignored. For example, the following two documents are equivalent, as the spaces and blank lines in the second document will be removed / ignored by the Hashdown parser:
+#### Expressing whitespace
+Normally, Hashdown ignores blank lines and leading or trailing spaces. For example, the following two documents are equivalent, as the spaces and blank lines in the second document will be removed / ignored by the Hashdown parser:
 ```md
 # key
 some text
@@ -167,6 +167,7 @@ some more text
 ```
 ````
 
+#### Escaping / nesting literals
 Literals can be nested within literals. The outer-most layer must have the most tick marks. If a literal is initiated with 5 tick marks, anything goes until the next line with 5 tick marks:
 ``````md
 `````
@@ -190,11 +191,11 @@ Use Hashdown's static `x_read_file` method to read from / deserialize an .md fil
 ```php
 use Neckberg\Hashdown\Hashdown;
 
-$x_data_from_md = Hashdown::x_read_file( '/path-to-file.md' );
+$a_groceries = Hashdown::x_read_file( '.../Groceries.md' );
 ```
-Given the following .md document, the above code would set `$x_data_from_md` to the PHP array shown beneath:
+Given the following `Groceries.md` document, the above code would set `$a_groceries` to the PHP array shown beneath:
 ```md
-# Foods
+# Groceries
 ##
 ### Name
 Twinkie
@@ -213,7 +214,7 @@ Diet Coke
 ```
 ```php
 [
-  'Foods' => [
+  'Groceries' => [
     'Name' => 'Twinkie',
     'Ingredients' => [
       'sugar',
@@ -233,71 +234,145 @@ Diet Coke
 ### Writing to an .md file
 Use Hashdown's static `write_to_file` method to write to an .md file.
 
-The php code below will produce a `Twinkie.md` file with the content shown beneath:
+The php code below will produce a `Groceries.md` file with the content shown beneath:
 ```php
 use Neckberg\Hashdown\Hashdown;
 
-$x_twinkie = [
-  'Name' => 'Twinkie',
-  'Ingredients' => [
-    'sugar',
-    'water',
-    'enriched flour',
+$a_groceries = [
+  'Groceries' => [
+    'Name' => 'Twinkie',
+    'Ingredients' => [
+      'sugar',
+      'water',
+      'enriched flour',
+    ],
+    'Name' => 'Diet Coke',
+    'Ingredients' => [
+      'carbonated water',
+      'caramel color',
+      'aspartame',
+    ],
   ]
 ];
-Hashdown::write_to_file($x_twinkie, $x_twinkie['Name'] . '.md');
+Hashdown::write_to_file($a_groceries, '.../Groceries.md');
 ```
 ```md
-# Name
+# Groceries
+##
+### Name
 Twinkie
 
-# Ingredients
+### Ingredients
 - sugar
 - water
 - enriched flour
+
+##
+### Name
+Diet Coke
+
+### Ingredients
+- carbonated water
+- caramel color
+- aspartame
 ```
 
+#### Formatting options
 By default, `write_to_file` will use the shorthand "dash" lists and sequential "blank" hash headers when possible (as shown above). But this behavior can be changed via the 3rd and 4th parameters:
 - `b_shorthand_lists`, bool: Use shorthand syntax for lists if true.
 - `b_omit_numeric_array_keys`, bool: Omit explicit key values for sequential numeric arrays if true.
 
-Assuming the same `$x_twinkie` variable defined above, the following calls will produce the output beneath:
+Assuming the same `$a_groceries` variable defined above, the following calls will produce the output beneath:
+
 ```php
-Hashdown::write_to_file($x_twinkie, $x_twinkie['Name'] . '.md', false, true);
+Hashdown::write_to_file($a_groceries, '.../Groceries.md', true, false);
 ```
 ```md
-# Name
+# Groceries
+##
+### Name
+Twinkie
+### Ingredients
+- sugar
+- water
+- enriched flour
+
+##
+### Name
+Diet Coke
+### Ingredients
+- carbonated water
+- caramel color
+- aspartame
+```
+
+```php
+Hashdown::write_to_file($a_groceries, '.../Groceries.md', false, true);
+```
+```md
+# Groceries
+##
+### Name
 Twinkie
 
-# Ingredients
-##
+### Ingredients
+####
 sugar
 
-##
+####
 water
 
-##
+####
 enriched flour
+
+##
+### Name
+Diet Coke
+
+### Ingredients
+####
+carbonated water
+
+####
+caramel color
+
+####
+aspartame
 ```
 
 ```php
-Hashdown::write_to_file($x_twinkie, $x_twinkie['Name'] . '.md', false, false);
+Hashdown::write_to_file($a_groceries, '.../Groceries.md', false, false);
 ```
 ```md
-# Name
+# Groceries
+## 0
+### Name
 Twinkie
 
-# Ingredients
-## 0
+### Ingredients
+#### 0
 sugar
+
+#### 1
+water
+
+#### 2
+enriched flour
 
 ## 1
-water
+### Name
+Diet Coke
 
-## 2
-enriched flour
+### Ingredients
+#### 0
+carbonated water
+
+#### 1
+caramel color
+
+#### 2
+aspartame
 ```
-
 
 ## Testing
 - cd to the directory

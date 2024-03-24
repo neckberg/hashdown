@@ -1,11 +1,18 @@
-#
-## Name
+# Groceries
+## 0
+### Name
 Twinkie
 
-## Ingredients
+### Ingredients
 - sugar
 - water
+- enriched flour
 
-#
-## Name
+## 1
+### Name
 Diet Coke
+
+### Ingredients
+- carbonated water
+- caramel color
+- aspartame

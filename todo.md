@@ -1,9 +1,11 @@
 # todo
 ## necessary
+- add notes on how to contribute
 - add more README.md content (e.g. for literals), and add phpunit tests for all the examples in the README file
 - submit to Packagist
 
 ## discretionary
+- add parameter for not writing blank lines, e.g. condensed or minified version
 - node depth errors: fix edge cases and exception message node depth and underlying code
 - remove Neckberg from namespace?
 - refactor parse functions
