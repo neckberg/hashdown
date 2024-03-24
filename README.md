@@ -289,7 +289,7 @@ Hashdown::write_to_file($a_groceries, '.../Groceries.md', true, false);
 ```
 ```md
 # Groceries
-##
+## 0
 ### Name
 Twinkie
 ### Ingredients
@@ -297,7 +297,7 @@ Twinkie
 - water
 - enriched flour
 
-##
+## 0
 ### Name
 Diet Coke
 ### Ingredients
