@@ -292,14 +292,16 @@ Hashdown::write_to_file($a_groceries, '.../Groceries.md', true, false);
 ## 0
 ### Name
 Twinkie
+
 ### Ingredients
 - sugar
 - water
 - enriched flour
 
-## 0
+## 1
 ### Name
 Diet Coke
+
 ### Ingredients
 - carbonated water
 - caramel color

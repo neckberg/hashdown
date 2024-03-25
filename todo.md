@@ -1,5 +1,6 @@
 # todo
 ## necessary
+- dash lists with numeric keys should be the default
 - add notes on how to contribute
 - add more README.md content (e.g. for literals), and add phpunit tests for all the examples in the README file
 - submit to Packagist
