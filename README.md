@@ -191,9 +191,9 @@ Use Hashdown's static `x_read_file` method to read from / deserialize an .md fil
 ```php
 use Neckberg\Hashdown\Hashdown;
 
-$a_groceries = Hashdown::x_read_file( '.../Groceries.md' );
+$x_groceries = Hashdown::x_read_file( '.../Groceries.md' );
 ```
-Given the following `Groceries.md` document, the above code would set `$a_groceries` to the PHP array shown beneath:
+Given the following `Groceries.md` document, the above code would set `$x_groceries` to the PHP array shown beneath:
 ```md
 # Groceries
 ##
@@ -238,7 +238,7 @@ The php code below will produce a `Groceries.md` file with the content shown ben
 ```php
 use Neckberg\Hashdown\Hashdown;
 
-$a_groceries = [
+$x_groceries = [
   'Groceries' => [
     'Name' => 'Twinkie',
     'Ingredients' => [
@@ -254,7 +254,7 @@ $a_groceries = [
     ],
   ]
 ];
-Hashdown::write_to_file($a_groceries, '.../Groceries.md');
+Hashdown::write_to_file($x_groceries, '.../Groceries.md');
 ```
 ```md
 # Groceries
@@ -282,10 +282,10 @@ By default, `write_to_file` will use the shorthand "dash" lists and sequential "
 - `b_shorthand_lists`, bool: Use shorthand syntax for lists if true.
 - `b_omit_numeric_array_keys`, bool: Omit explicit key values for sequential numeric arrays if true.
 
-Assuming the same `$a_groceries` variable defined above, the following calls will produce the output beneath:
+Assuming the same `$x_groceries` variable defined above, the following calls will produce the output beneath:
 
 ```php
-Hashdown::write_to_file($a_groceries, '.../Groceries.md', true, false);
+Hashdown::write_to_file($x_groceries, '.../Groceries.md', true, false);
 ```
 ```md
 # Groceries
@@ -309,7 +309,7 @@ Diet Coke
 ```
 
 ```php
-Hashdown::write_to_file($a_groceries, '.../Groceries.md', false, true);
+Hashdown::write_to_file($x_groceries, '.../Groceries.md', false, true);
 ```
 ```md
 # Groceries
@@ -343,7 +343,7 @@ aspartame
 ```
 
 ```php
-Hashdown::write_to_file($a_groceries, '.../Groceries.md', false, false);
+Hashdown::write_to_file($x_groceries, '.../Groceries.md', false, false);
 ```
 ```md
 # Groceries
