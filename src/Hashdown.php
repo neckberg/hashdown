@@ -194,7 +194,18 @@ class Hashdown {
       throw new \Exception('Failed to open non-existent file: ' . $s_file_path);
     }
 
-    $a_hd_lines = file($s_file_path, FILE_IGNORE_NEW_LINES);
+    $a_md_lines = file($s_file_path, FILE_IGNORE_NEW_LINES);
+    return self::x_parse_md_lines($a_md_lines, $s_file_path);
+  }
+
+  /**
+   * Parses an array of Markdown lines into a PHP associative array.
+   *
+   * @param array $a_hd_lines Array of lines of a Markdown document
+   * @param string $s_file_path The path to the Markdown file being parsed. only used for exception messaging.
+   * @return array|false The associative array representation of the Markdown content, or false on failure.
+   */
+  static function x_parse_md_lines ( array $a_hd_lines, string $s_file_path ) {
     $is_in_literal = false;
     $x_data = [];
     $x_data_cursor = &$x_data;
