@@ -21,12 +21,12 @@ class Hashdown {
    *
    * @param mixed $x_data The associative array, object, or scalar to be written.
    * @param string $s_file_name The file name where the Markdown will be saved.
-   * @param bool $b_shorthand_lists Use shorthand syntax for lists if true.
-   * @param bool $b_omit_numeric_array_keys Omit explicit key values for sequential numeric arrays if true.
+   * @param bool $b_no_shorthand_lists If true, don't use shorthand "dash" syntax for any lists
+   * @param bool $b_omit_numeric_array_keys If true, omit explicit key values for sequential numeric arrays
    * @return void
    */
-  static function write_to_file ($x_data, string $s_file_name, bool $b_shorthand_lists = true, bool $b_omit_numeric_array_keys = true) {
-    $s_hd_markup = self::s_stringify_x($x_data, $b_shorthand_lists, $b_omit_numeric_array_keys);
+  static function write_to_file ($x_data, string $s_file_name, bool $b_no_shorthand_lists = false, bool $b_omit_numeric_array_keys = false) {
+    $s_hd_markup = self::s_stringify_x($x_data, $b_no_shorthand_lists, $b_omit_numeric_array_keys);
     if ( file_put_contents($s_file_name, $s_hd_markup) === false ) {
       throw new \Exception('Failed to write to file ' . $s_file_name . '. Check permissions and file path.');
     }
@@ -36,13 +36,13 @@ class Hashdown {
    * Converts a PHP associative array or object to a Markdown string.
    *
    * @param mixed $x_data The associative array or object to be converted.
-   * @param bool $b_shorthand_lists Use shorthand syntax for lists if true.
-   * @param bool $b_omit_numeric_array_keys Omit explicit key values for sequential numeric arrays if true.
+   * @param bool $b_no_shorthand_lists If true, don't use shorthand "dash" syntax for any lists
+   * @param bool $b_omit_numeric_array_keys If true, omit explicit key values for sequential numeric arrays
    * @return string The generated Markdown content.
    */
-  static function s_stringify_x ( $x_data, bool $b_shorthand_lists = true, bool $b_omit_numeric_array_keys = true ) {
+  static function s_stringify_x ( $x_data, bool $b_no_shorthand_lists = false, bool $b_omit_numeric_array_keys = false ) {
     ob_start();
-    self::echo_hd( $x_data, $b_shorthand_lists, $b_omit_numeric_array_keys);
+    self::echo_hd( $x_data, $b_no_shorthand_lists, $b_omit_numeric_array_keys);
     return trim(ob_get_clean()) . PHP_EOL;
   }
 
@@ -50,12 +50,13 @@ class Hashdown {
    * Echoes a PHP associative array or object as Markdown content.
    *
    * @param mixed $x_data The associative array or object to be echoed.
-   * @param bool $b_shorthand_lists Use shorthand syntax for lists if true.
-   * @param bool $b_omit_numeric_array_keys Omit explicit key values for sequential numeric arrays if true.
+   * @param bool $b_no_shorthand_lists If true, don't use shorthand "dash" syntax for any lists
+   * @param bool $b_omit_numeric_array_keys If true, omit explicit key values for sequential numeric arrays
    * @param int $i_current_level The current header level for recursive nesting.
    * @return void
    */
-  static function echo_hd ($x_data, bool $b_shorthand_lists = true, bool $b_omit_numeric_array_keys = true, int $i_current_level = 1 ) {
+  static function echo_hd ($x_data, bool $b_no_shorthand_lists = false, bool $b_omit_numeric_array_keys = false, int $i_current_level = 1 ) {
+    $b_shorthand_lists = (!$b_no_shorthand_lists);
     if ( is_object($x_data) ) {
       $x_data = json_decode(json_encode($x_data), true);
     }
@@ -90,7 +91,7 @@ class Hashdown {
         echo ' ' . $s_key;
       }
       echo PHP_EOL;
-      self::echo_hd( $x_value, $b_shorthand_lists, $b_omit_numeric_array_keys, $i_current_level + 1 );
+      self::echo_hd( $x_value, $b_no_shorthand_lists, $b_omit_numeric_array_keys, $i_current_level + 1 );
     }
   }
 

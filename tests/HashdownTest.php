@@ -7,7 +7,10 @@ class HashdownTest extends TestCase {
 
   // public function testNewCase () {
   //   $x_from_md = Hashdown::x_read_file( __DIR__ . '/data/0_src.md');
-  //   Hashdown::write_to_file($x_from_md, __DIR__ . '/data/0_tgt.md', true, false);
+  //   Hashdown::write_to_file($x_from_md, __DIR__ . '/data/0_tgt.md');
+  //   // Hashdown::write_to_file($x_from_md, __DIR__ . '/data/0_tgt.md', false, true);
+  //   // Hashdown::write_to_file($x_from_md, __DIR__ . '/data/0_tgt.md', true, false);
+  //   // Hashdown::write_to_file($x_from_md, __DIR__ . '/data/0_tgt.md', true, true);
   //   file_put_contents( __DIR__ . '/data/0_tgt.json', json_encode($x_from_md, JSON_PRETTY_PRINT) );
   //   $this->assertSame('hello', 'hello', 'not the same');
   // }
@@ -53,21 +56,22 @@ class HashdownTest extends TestCase {
     $this->assertGeneratedMdFileMatchesExpected('single-scalar-value-literal.txt');
     $this->assertGeneratedMdFileMatchesExpected('scalar-nested-literal.txt');
     $this->assertGeneratedMdFileMatchesExpected('list.json');
-    $this->assertGeneratedMdFileMatchesExpected('list.json', false, true, 'hash-lists');
-    $this->assertGeneratedMdFileMatchesExpected('list.json', false, false, 'hash-lists_numeric-keys');
+    $this->assertGeneratedMdFileMatchesExpected('list.json', true, false, 'hash-lists');
+    $this->assertGeneratedMdFileMatchesExpected('list.json', true, true, 'hash-lists_omit-numeric-keys');
     $this->assertGeneratedMdFileMatchesExpected('todo-list.json');
-    $this->assertGeneratedMdFileMatchesExpected('todo-list.json', false, true, 'hash-lists');
-    $this->assertGeneratedMdFileMatchesExpected('todo-list.json', false, false, 'hash-lists_numeric-keys');
-    $this->assertGeneratedMdFileMatchesExpected('todo-list.json', true, false, 'dash-lists_numeric-keys');
+    $this->assertGeneratedMdFileMatchesExpected('todo-list.json', true, false, 'hash-lists');
+    $this->assertGeneratedMdFileMatchesExpected('todo-list.json', true, true, 'hash-lists_omit-numeric-keys');
+    $this->assertGeneratedMdFileMatchesExpected('todo-list.json', false, true, 'dash-lists_omit-numeric-keys');
     $this->assertGeneratedMdFileMatchesExpected('list-of-paragraphs.json');
-    $this->assertGeneratedMdFileMatchesExpected('list-of-paragraphs.json', false, true, 'hash-lists');
+    $this->assertGeneratedMdFileMatchesExpected('list-of-paragraphs.json', true, false, 'hash-lists');
+    $this->assertGeneratedMdFileMatchesExpected('list-of-paragraphs.json', true, true, 'hash-lists_omit-numeric-keys');
     $this->assertGeneratedMdFileMatchesExpected('page-builder.json');
-    $this->assertGeneratedMdFileMatchesExpected('page-builder.json', false, true, 'hash-lists');
-    $this->assertGeneratedMdFileMatchesExpected('page-builder.json', false, false, 'hash-lists_numeric-keys');
-    $this->assertGeneratedMdFileMatchesExpected('page-builder.json', true, false, 'dash-lists_numeric-keys');
+    $this->assertGeneratedMdFileMatchesExpected('page-builder.json', true, false, 'hash-lists');
+    $this->assertGeneratedMdFileMatchesExpected('page-builder.json', true, true, 'hash-lists_omit-numeric-keys');
+    $this->assertGeneratedMdFileMatchesExpected('page-builder.json', false, true, 'dash-lists_omit-numeric-keys');
   }
 
-  private function assertGeneratedMdFileMatchesExpected(string $s_src_filename, bool $b_shorthand_lists = true, bool $b_omit_numeric_array_keys = true, string $validation_file_suffix = '' ) {
+  private function assertGeneratedMdFileMatchesExpected(string $s_src_filename, bool $b_no_shorthand_lists = false, bool $b_omit_numeric_array_keys = false, string $validation_file_suffix = '' ) {
     if ($validation_file_suffix) {
       $validation_file_suffix = '-' . $validation_file_suffix;
     }
@@ -80,7 +84,7 @@ class HashdownTest extends TestCase {
     $s_generated_file_path = __DIR__ . '/tmp/' . $s_generated_file_name;
 
     // write the .md file
-    Hashdown::write_to_file($x_source_data, $s_generated_file_path, $b_shorthand_lists, $b_omit_numeric_array_keys);
+    Hashdown::write_to_file($x_source_data, $s_generated_file_path, $b_no_shorthand_lists, $b_omit_numeric_array_keys);
 
     // Assert the file was created
     $this->assertFileExists($s_generated_file_path, 'File should be created: ' . $s_generated_file_path);

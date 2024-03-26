@@ -258,7 +258,7 @@ Hashdown::write_to_file($x_groceries, '.../Groceries.md');
 ```
 ```md
 # Groceries
-##
+## 0
 ### Name
 Twinkie
 
@@ -267,7 +267,7 @@ Twinkie
 - water
 - enriched flour
 
-##
+## 1
 ### Name
 Diet Coke
 
@@ -278,36 +278,13 @@ Diet Coke
 ```
 
 #### Formatting options
-By default, `write_to_file` will use the shorthand "dash" lists and sequential "blank" hash headers when possible (as shown above). But this behavior can be changed via the 3rd and 4th parameters:
-- `b_shorthand_lists`, bool: Use shorthand syntax for lists if true.
-- `b_omit_numeric_array_keys`, bool: Omit explicit key values for sequential numeric arrays if true.
+By default, `write_to_file` will use the shorthand "dash" lists and explicitly numbered sequential array items (as shown above). But this behavior can be changed via the 3rd and 4th parameters:
+- `b_no_shorthand_lists`, bool: If true, don't use shorthand "dash" syntax for any lists. Only use "hash" syntax.
+- `b_omit_numeric_array_keys`, bool: If true, omit explicit key values for sequential numeric arrays.
 
 Assuming the same `$x_groceries` variable defined above, the following calls will produce the output beneath:
 
-```php
-Hashdown::write_to_file($x_groceries, '.../Groceries.md', true, false);
-```
-```md
-# Groceries
-## 0
-### Name
-Twinkie
-
-### Ingredients
-- sugar
-- water
-- enriched flour
-
-## 1
-### Name
-Diet Coke
-
-### Ingredients
-- carbonated water
-- caramel color
-- aspartame
-```
-
+##### Allow shorthand "dash" lists, but omit sequential keys where possible
 ```php
 Hashdown::write_to_file($x_groceries, '.../Groceries.md', false, true);
 ```
@@ -318,32 +295,22 @@ Hashdown::write_to_file($x_groceries, '.../Groceries.md', false, true);
 Twinkie
 
 ### Ingredients
-####
-sugar
-
-####
-water
-
-####
-enriched flour
+- sugar
+- water
+- enriched flour
 
 ##
 ### Name
 Diet Coke
 
 ### Ingredients
-####
-carbonated water
-
-####
-caramel color
-
-####
-aspartame
+- carbonated water
+- caramel color
+- aspartame
 ```
-
+##### Only allow "hash" style lists, but show explicit sequential key numbers
 ```php
-Hashdown::write_to_file($x_groceries, '.../Groceries.md', false, false);
+Hashdown::write_to_file($x_groceries, '.../Groceries.md', true, false);
 ```
 ```md
 # Groceries
@@ -373,6 +340,41 @@ carbonated water
 caramel color
 
 #### 2
+aspartame
+```
+
+##### Only allow "hash" style lists, and omit sequential keys where possible
+```php
+Hashdown::write_to_file($x_groceries, '.../Groceries.md', false, false);
+```
+```md
+# Groceries
+##
+### Name
+Twinkie
+
+### Ingredients
+####
+sugar
+
+####
+water
+
+####
+enriched flour
+
+##
+### Name
+Diet Coke
+
+### Ingredients
+####
+carbonated water
+
+####
+caramel color
+
+####
 aspartame
 ```
 
