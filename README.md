@@ -129,7 +129,7 @@ Diet Coke
 #### Escaping embedded Markdown syntax
 If you need to represent Markdown as scalar content within your .md document, you can escape it using Markdown's code block syntax.
 
-A "literal" or "code block" section is designated by three or more tick marks (<code>\`\`\`</code>). The `data` key below has a child node called `author`, while the `content` node is just a string of Markdown text:
+A "literal" or "code block" section is designated by three or more tick marks (<code>\`\`\`</code>). The `data` key below has a child node called `title`, while the `content` node is just a string of Markdown text:
 ````md
 # data
 ## title
