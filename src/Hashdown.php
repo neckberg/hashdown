@@ -206,7 +206,7 @@ class Hashdown {
    * @param string $s_file_path The path to the Markdown file being parsed. only used for exception messaging.
    * @return array|false The associative array representation of the Markdown content, or false on failure.
    */
-  static function x_parse_md_lines ( array $a_hd_lines, string $s_file_path ) {
+  static function x_parse_md_lines ( array $a_hd_lines, string $s_file_path = '' ) {
     $is_in_literal = false;
     $x_data = [];
     $x_data_cursor = &$x_data;
