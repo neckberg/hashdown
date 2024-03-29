@@ -1,0 +1,129 @@
+# name
+About
+
+# id
+123
+
+# path
+/about
+
+# content blocks
+##
+### width
+8
+
+### type
+parent block
+
+### child blocks
+####
+##### width
+4
+
+##### type
+card
+
+##### icon
+star.svg
+
+##### title
+Yay
+
+##### text
+Lorem Ipsum...
+Dolor sit amet...
+
+##### link
+###### url
+```
+#
+```
+
+###### text
+Learn more
+
+####
+##### width
+4
+
+##### type
+card
+
+##### icon
+thumbsup.svg
+
+##### title
+Good
+
+##### text
+Lorem Ipsum...
+Dolor sit amet...
+
+##### link
+###### url
+https://example.com
+
+###### text
+Learn more
+
+####
+##### width
+4
+
+##### type
+card
+
+##### icon
+check.svg
+
+##### title
+Done
+
+##### text
+Lorem Ipsum...
+Dolor sit amet...
+
+##### link
+###### url
+```
+#
+```
+
+###### text
+Learn more
+
+####
+##### width
+12
+
+##### type
+wysiwyg
+
+##### content
+Lorem ipsum dolor
+Sit amet conspectitur
+
+####
+##### width
+12
+
+##### type
+blog preview
+
+##### max articles to show
+3
+
+##### categories
+- news
+- events
+- spotlight
+
+##
+### width
+4
+
+### type
+widget area
+
+### widget area
+right_sidebar

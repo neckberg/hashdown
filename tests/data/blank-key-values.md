@@ -1,0 +1,22 @@
+# blank 1
+# blank 2
+
+# blank 3
+# blank 4
+# not blank 1
+value 1
+# blank 5
+# blank 6
+
+# not blank 2
+value 2
+
+#
+#
+#
+# not blank 3
+value 3
+
+#
+#
+#
