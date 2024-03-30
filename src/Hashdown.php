@@ -281,7 +281,7 @@ class Hashdown {
 
     if ( $a_line_type[0] === 'array' ) {
       if ( $a_line_type[2] > $i_max_list_depth ) {
-        throw new \Exception('Invalid node depth at line ' . $i_line + 1 . ': ' . $s_line);
+        throw new \Exception('Invalid node depth at line ' . ($i_line + 1) . ': ' . $s_line);
       }
 
       $i_relative_hash_depth = $a_line_type[2] - $i_list_depth;
@@ -299,7 +299,7 @@ class Hashdown {
     $i_list_depth = 0;
     if ( $a_line_type[0] === 'object' ) {
       if ( $a_line_type[2] > $i_max_hash_depth ) {
-        throw new \Exception('Invalid node depth at line ' . $i_line + 1 . ': ' . $s_line);
+        throw new \Exception('Invalid node depth at line ' . ($i_line + 1) . ': ' . $s_line);
       }
       $i_relative_hash_depth = $a_line_type[2] - count($a_key_cursor_location);
       for ($i = $i_relative_hash_depth; $i < 1; $i++) {
