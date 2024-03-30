@@ -122,7 +122,7 @@ class Hashdown {
    * @param bool $is_in_list Indicates if the value is part of a list.
    * @return bool Indicates if the value was multiline.
    */
-  private static function b_echo_scalar (string $s_value, $is_in_list = false) {
+  private static function b_echo_scalar (?string $s_value, $is_in_list = false) {
     if ( $s_value === '' || $s_value === null || $s_value === false ) {
       echo PHP_EOL;
       return;
