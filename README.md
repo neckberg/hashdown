@@ -227,7 +227,7 @@ Diet Coke
       'caramel color',
       'aspartame',
     ],
-  ]
+  ],
 ];
 ```
 
@@ -252,7 +252,7 @@ $x_groceries = [
       'caramel color',
       'aspartame',
     ],
-  ]
+  ],
 ];
 Hashdown::write_to_file($x_groceries, '.../Groceries.md');
 ```
