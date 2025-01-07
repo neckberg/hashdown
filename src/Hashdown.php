@@ -200,6 +200,17 @@ class Hashdown {
   }
 
   /**
+   * Parses a string of Markdown content into a PHP associative array.
+   *
+   * @param string $s_hd_content String representing a Markdown document
+   * @param string $s_line_delimeter The string marking the boundary between lines in the file. Default is PHP_EOL.
+   * @return array|false The associative array representation of the Markdown content, or false on failure.
+   */
+  static function x_parse_md_string ( string $a_hd_content, string $s_line_delimeter = PHP_EOL ) {
+    return self::x_parse_md_lines ( explode($s_line_delimeter, $a_hd_content) );
+  }
+
+  /**
    * Parses an array of Markdown lines into a PHP associative array.
    *
    * @param array $a_hd_lines Array of lines of a Markdown document
