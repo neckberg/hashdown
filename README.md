@@ -378,6 +378,26 @@ caramel color
 aspartame
 ```
 
+### Reading and writing to / from strings and arrays
+In addition to writing and reading directly to and from .md files, you can also manipulate md strings directly, using the following functions:
+#### x_parse_md_string
+Accepts a string of Markdown content, and returns a corresponding PHP associative array, or false on failure.
+##### Parameters
+- string `$s_hd_content` String representing a Markdown document
+- string `$s_line_delimeter` The string marking the boundary between lines in the file. Default is PHP_EOL.
+
+#### x_parse_md_lines
+Accepts an array of Markdown lines, and returns a corresponding PHP associative array, or false on failure.
+##### Parameters
+- array `$a_hd_lines` Array of lines of a Markdown document
+
+#### s_stringify_x
+Accepts a PHP associative array or object, and returns a corresponding Markdown string.
+##### Parameters
+- mixed `$x_data` The associative array or object to be converted.
+- bool `$b_no_shorthand_lists` If true, don't use shorthand "dash" syntax for any lists
+- bool `$b_omit_numeric_array_keys` If true, omit explicit key values for sequential numeric arrays
+
 ## Testing
 - cd to the directory
 - composer install

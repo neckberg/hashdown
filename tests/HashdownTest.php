@@ -14,6 +14,20 @@ class HashdownTest extends TestCase {
   //   file_put_contents( __DIR__ . '/data/0_tgt.json', json_encode($x_from_md, JSON_PRETTY_PRINT) );
   //   $this->assertSame('hello', 'hello', 'not the same');
   // }
+  public function testParseString () {
+    $this->assertParsedMdMatchesString('blank', '');
+    $this->assertParsedMdMatchesString('single-scalar-value', 'lorem ipsum');
+    $this->assertParsedMdMatchesString('single-scalar-value-literal', '# lorem ipsum' . PHP_EOL . PHP_EOL . '## lorem ipsum');
+    $this->assertParsedMdMatchesString('literals-within-literals', rtrim(file_get_contents(__DIR__ . '/data/literals-within-literals.txt')));
+
+    $this->assertParsedMdMatchesCorrespondingJson('todo-list', true);
+    $this->assertParsedMdMatchesCorrespondingJson('list-of-paragraphs', true);
+
+    $this->assertParsedMdMatchesCorrespondingJson('person', true);
+    $this->assertParsedMdMatchesCorrespondingJson('person-first-last-name', true);
+    $this->assertParsedMdMatchesCorrespondingJson('blank-key-values', true);
+    $this->assertParsedMdMatchesCorrespondingJson('page-builder', true);
+  }
   public function testParseFile () {
     $this->assertParsedMdMatchesString('blank', '');
     $this->assertParsedMdMatchesString('single-scalar-value', 'lorem ipsum');
@@ -29,8 +43,18 @@ class HashdownTest extends TestCase {
     $this->assertParsedMdMatchesCorrespondingJson('page-builder');
   }
 
-  private function assertParsedMdMatchesCorrespondingJson(string $s_filename) {
-    $x_from_md = Hashdown::x_read_file( __DIR__ . '/data/' . $s_filename . '.md' );
+  private function x_get_parsed_data_from_md_file(string $s_file_path, bool $b_get_file_contents_as_string = false) {
+    if ($b_get_file_contents_as_string) {
+      return Hashdown::x_parse_md_string( file_get_contents($s_file_path) );
+    }
+    else {
+      return Hashdown::x_read_file( $s_file_path );
+    }
+  }
+
+  private function assertParsedMdMatchesCorrespondingJson(string $s_filename, bool $b_get_file_contents_as_string = false) {
+    $x_from_md = $this->x_get_parsed_data_from_md_file( __DIR__ . '/data/' . $s_filename . '.md', $b_get_file_contents_as_string);
+
     $a_from_json = json_decode( file_get_contents( __DIR__ . '/data/' . $s_filename . '.json'), true );
     // file_put_contents( __DIR__ . '/tmp/log_' . $s_filename . '_json.txt', print_r($x_from_json, 1) );
     // file_put_contents( __DIR__ . '/tmp/log_' . $s_filename . '_md.txt', print_r($x_from_md, 1) );
@@ -42,8 +66,8 @@ class HashdownTest extends TestCase {
     );
   }
 
-  private function assertParsedMdMatchesString(string $s_filename, string $s_expected_value) {
-    $x_from_md = Hashdown::x_read_file( __DIR__ . '/data/' . $s_filename . '.md' );
+  private function assertParsedMdMatchesString(string $s_filename, string $s_expected_value, bool $b_get_file_contents_as_string = false) {
+    $x_from_md = $this->x_get_parsed_data_from_md_file( __DIR__ . '/data/' . $s_filename . '.md', $b_get_file_contents_as_string);
     $this->assertSame(
       $s_expected_value,
       $x_from_md,
