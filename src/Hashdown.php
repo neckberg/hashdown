@@ -110,7 +110,7 @@ class Hashdown {
       }
     }
     // if it was multiline, a new line will have already been added above
-    if ( ! $is_multiline) {
+    if ( ! ($is_multiline ?? false) ) {
       echo PHP_EOL;
     }
   }
