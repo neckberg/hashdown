@@ -79,9 +79,11 @@ class HashdownTest extends TestCase {
     $this->assertGeneratedMdFileMatchesExpected('single-scalar-value.txt');
     $this->assertGeneratedMdFileMatchesExpected('single-scalar-value-literal.txt');
     $this->assertGeneratedMdFileMatchesExpected('scalar-nested-literal.txt');
+    $this->assertGeneratedMdFileMatchesExpected('list-empty.json');
     $this->assertGeneratedMdFileMatchesExpected('list.json');
     $this->assertGeneratedMdFileMatchesExpected('list.json', true, false, 'hash-lists');
     $this->assertGeneratedMdFileMatchesExpected('list.json', true, true, 'hash-lists_omit-numeric-keys');
+    $this->assertGeneratedMdFileMatchesExpected('todo-list-empty.json');
     $this->assertGeneratedMdFileMatchesExpected('todo-list.json');
     $this->assertGeneratedMdFileMatchesExpected('todo-list.json', true, false, 'hash-lists');
     $this->assertGeneratedMdFileMatchesExpected('todo-list.json', true, true, 'hash-lists_omit-numeric-keys');
