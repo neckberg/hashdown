@@ -98,6 +98,30 @@ class HashdownTest extends TestCase {
     $this->assertGeneratedMdFileMatchesExpected('page-builder.json', false, true, 'dash-lists_omit-numeric-keys');
   }
 
+  public function testParseExplicitScalarTypes() {
+    $x_expected = [
+      'float_value_unambiguous' => 3.14,
+      'float_value_ambiguous' => 3,
+      'bool_true' => true,
+      'string_true' => 'true',
+      'string_false' => 'false',
+      'null_null' => null,
+      'string_null' => 'null',
+      'int_int' => 123,
+      'string_int' => '123',
+      'string_leading_zero' => '007',
+      'string_scientific' => '1e6',
+      'string_quoted' => '"123"',
+    ];
+
+    $x_from_md = Hashdown::x_read_file(__DIR__ . '/data/write-read-roundtrip-scalar.json.md');
+    $this->assertSame(
+      $x_expected,
+      $x_from_md,
+      'Parsing explicit scalar markers must preserve unambiguous floats and typed floats.'
+    );
+  }
+
   private function assertGeneratedMdFileMatchesExpected(string $s_src_filename, bool $b_no_shorthand_lists = false, bool $b_omit_numeric_array_keys = false, string $validation_file_suffix = '' ) {
     if ($validation_file_suffix) {
       $validation_file_suffix = '-' . $validation_file_suffix;
