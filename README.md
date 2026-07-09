@@ -317,6 +317,45 @@ With explicit hints, Hashdown uses the hint as authoritative and coerces the val
 
 A future enhancement is planned for an `undefined`/`undef` sentinel that would omit the key entirely rather than producing `null`.
 
+## Limits and performance
+
+Hashdown does not impose its own file-size limit. Practical limits come from PHP: the entire file and the resulting PHP array are held in memory at once. There is no streaming parse or write today.
+
+### What to expect
+
+| Factor | Behavior |
+|---|---|
+| **Memory** | Peak usage is often several times the file size — the file is loaded as an array of lines, a full PHP array is built, and writes buffer the complete markdown string in memory. |
+| **Typical use** | Page-builder-scale files (nested blocks, lists, comments) parse and write in a few milliseconds. |
+| **Large dash lists** | Lists using `-` shorthand parse in linear time. Hundreds of thousands of items are practical on default PHP memory settings. |
+| **Many flat keys** | Very wide structures (hundreds of thousands of top-level keys) are more memory-intensive than lists or nested trees. |
+| **Large single values** | Multi-megabyte string values are supported, but the string exists in memory on both read and write. |
+
+### When things fail
+
+If PHP runs out of memory, you will see a fatal error such as `Allowed memory size of ... bytes exhausted`. Hashdown does not catch this — raise `memory_limit` in `php.ini` or your runtime if you need to process larger files.
+
+With PHP's default `memory_limit` of `128M`, rough comfort zones are:
+
+| `memory_limit` | Rough comfort zone |
+|---|---|
+| 128M (common default) | Low- to mid-megabyte files; hundreds of thousands of list items or ~250k flat keys |
+| 256M | Tens of megabytes |
+| 512M+ | Larger blobs and 500k+ flat keys |
+
+Exact limits depend on structure: many small keys cost more per entry than a few nested nodes or a single large literal.
+
+### Errors you may see
+
+| Cause | Symptom |
+|---|---|
+| `memory_limit` exceeded | PHP fatal error (most common at scale) |
+| `max_execution_time` exceeded | `Maximum execution time exceeded` (if configured) |
+| Write failure | `Failed to write to file...` |
+| Invalid structure | `Invalid node depth at line N...` |
+
+For very large files in the future, streaming parse/write (processing incrementally without loading everything into memory) would be the architectural next step. That is not implemented today.
+
 ## Code examples
 ### Reading from an .md file
 Use Hashdown's static `x_read_file` method to read from / deserialize an .md file:
