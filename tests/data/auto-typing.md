@@ -4,6 +4,40 @@
 # float-value
 3.14
 
+# scientific-value
+1.23e4
+
+# scientific-value-negative
+-1.23e4
+
+# scientific-float
+```float
+1.23e4
+```
+
+# scientific-int
+```int
+1.23e4
+```
+
+# scientific-int-2
+```int
+12.3456e2
+```
+
+# scientific-string-backtick
+`1.23e4`
+
+# scientific-string-fence
+```
+1.23e4
+```
+
+# scientific-string-hint
+```string
+1.23e4
+```
+
 # true-value
 true
 
