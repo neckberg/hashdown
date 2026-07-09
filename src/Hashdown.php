@@ -420,14 +420,15 @@ class Hashdown {
   }
 
   /**
-   * Sets a value in the associative array at the specified key path.
+   * Parses a scalar value from Markdown text.
    *
-   * @param array &$a_array The associative array.
-   * @param array $a_keys The key path where the value should be set.
-   * @param mixed $x_value The value to set.
-   * @return void
+   * @param string $s_value The raw scalar text.
+   * @param bool $b_auto_type_scalars If true, scalar values will be auto-typed.
+   * @param string $s_type_hint Optional explicit type hint from fenced blocks.
+   * @param bool $b_is_literal If true, preserve the scalar as literal text.
+   * @return mixed The parsed scalar value.
    */
-private static function x_parse_scalar(string $s_value, bool $b_auto_type_scalars = true, string $s_type_hint = '', bool $b_is_literal = false) {
+  private static function x_parse_scalar(string $s_value, bool $b_auto_type_scalars = true, string $s_type_hint = '', bool $b_is_literal = false) {
     if ($b_is_literal) {
       return $s_value;
     }
@@ -444,20 +445,39 @@ private static function x_parse_scalar(string $s_value, bool $b_auto_type_scalar
     return self::x_auto_type_scalar($s_trimmed);
   }
 
-  private static function x_is_integer_literal(string $s_value) {
+  /**
+   * Returns true if the value is a valid integer literal.
+   *
+   * @param string $s_value The scalar text to check.
+   * @return bool True if the text represents an integer.
+   */
+  private static function b_is_integer_literal(string $s_value) {
     return preg_match('/^[+-]?(?:0|[1-9]\d*)$/', $s_value) === 1;
   }
 
-  private static function x_is_float_literal(string $s_value) {
+  /**
+   * Returns true if the value is a valid float literal.
+   *
+   * @param string $s_value The scalar text to check.
+   * @return bool True if the text represents a floating-point number.
+   */
+  private static function b_is_float_literal(string $s_value) {
     return preg_match('/^[+-]?(?:\d*\.\d+|\d+\.\d*)(?:[eE][+-]?\d+)?$/', $s_value) === 1;
   }
 
+  /**
+   * Casts a scalar string using an explicit type hint.
+   *
+   * @param string $s_value The scalar text to cast.
+   * @param string $s_type_hint The explicit type hint (int, float, bool, null, string).
+   * @return mixed The cast value, or the original string if the hint is invalid.
+   */
   private static function x_cast_scalar(string $s_value, string $s_type_hint) {
     switch ($s_type_hint) {
       case 'int':
-        return self::x_is_integer_literal($s_value) ? intval($s_value) : $s_value;
+        return self::b_is_integer_literal($s_value) ? intval($s_value) : $s_value;
       case 'float':
-        return self::x_is_float_literal($s_value) ? floatval($s_value) : $s_value;
+        return self::b_is_float_literal($s_value) ? floatval($s_value) : $s_value;
       case 'bool':
         if (strcasecmp($s_value, 'true') === 0) return true;
         if (strcasecmp($s_value, 'false') === 0) return false;
@@ -470,6 +490,12 @@ private static function x_parse_scalar(string $s_value, bool $b_auto_type_scalar
     }
   }
 
+  /**
+   * Converts a scalar string to its PHP type when auto-typing is enabled.
+   *
+   * @param string $s_value The scalar text to convert.
+   * @return mixed The converted PHP scalar value.
+   */
   private static function x_auto_type_scalar(string $s_value) {
     if ($s_value === '') {
       return '';
@@ -483,18 +509,24 @@ private static function x_parse_scalar(string $s_value, bool $b_auto_type_scalar
     if (strcasecmp($s_value, 'false') === 0) {
       return false;
     }
-    if (self::x_is_integer_literal($s_value)) {
+    if (self::b_is_integer_literal($s_value)) {
       if ($s_value !== '0' && preg_match('/^0[0-9]+$/', $s_value)) {
         return $s_value;
       }
       return intval($s_value);
     }
-    if (self::x_is_float_literal($s_value)) {
+    if (self::b_is_float_literal($s_value)) {
       return floatval($s_value);
     }
     return $s_value;
   }
 
+  /**
+   * Detects an inline backtick-wrapped scalar string.
+   *
+   * @param string $s_value The scalar text to inspect.
+   * @return bool True if the value is an inline backtick string.
+   */
   private static function b_is_inline_backtick_string(string $s_value) {
     return strlen($s_value) >= 2
       && $s_value[0] === '`'
@@ -502,6 +534,14 @@ private static function x_parse_scalar(string $s_value, bool $b_auto_type_scalar
       && strpos($s_value, PHP_EOL) === false;
   }
 
+  /**
+   * Sets a value in the associative array at the specified key path.
+   *
+   * @param array &$a_array The associative array.
+   * @param array $a_keys The key path where the value should be set.
+   * @param mixed $x_value The value to set.
+   * @return void
+   */
   private static function set_object_key (&$a_array, $a_keys = [], $x_value = '') {
     $a_current = &$a_array;
     foreach($a_keys as $s_key) {
