@@ -193,7 +193,7 @@ Comments may appear as:
 - **Multi-line** blocks spanning several lines
 - **Inline** notes on the same line as a header, list item, or scalar text
 
-```md
+````md
 <!-- file note -->
 
 # Name
@@ -212,7 +212,7 @@ comment
 ```
 # header <!-- preserved in literal -->
 ```
-```
+````
 
 When writing from PHP, comments are not re-emitted. File-origin round-trips preserve PHP values, not the original comment text.
 
