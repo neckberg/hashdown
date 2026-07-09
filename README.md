@@ -185,6 +185,37 @@ Literals can be nested within literals. The outer-most layer must have the most 
 # This is outside the literal, since the line above has 5 tick marks
 ``````
 
+### Comments
+Hashdown supports standard Markdown/HTML comments (`<!-- ... -->`) for annotating files by hand. Comments are ignored when parsing **outside** fenced literals. Inside a fenced literal, `<!-- -->` is preserved as part of the value.
+
+Comments may appear as:
+- **Full-line** annotations between keys or scalar lines
+- **Multi-line** blocks spanning several lines
+- **Inline** notes on the same line as a header, list item, or scalar text
+
+```md
+<!-- file note -->
+
+# Name
+Jane <!-- display name -->
+
+# Notes
+First line <!-- inline -->
+Second line
+
+<!--
+multi-line
+comment
+-->
+
+# content
+```
+# header <!-- preserved in literal -->
+```
+```
+
+When writing from PHP, comments are not re-emitted. File-origin round-trips preserve PHP values, not the original comment text.
+
 ### Auto-typing, escaping, and round-trips
 By default, Hashdown auto-types plain scalar text when parsing. The following table summarizes common cases:
 

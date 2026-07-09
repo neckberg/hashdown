@@ -27,6 +27,7 @@ class HashdownTest extends TestCase {
     $this->assertParsedMdMatchesCorrespondingJson('person-first-last-name', true);
     $this->assertParsedMdMatchesCorrespondingJson('blank-key-values', true);
     $this->assertParsedMdMatchesCorrespondingJson('page-builder', true);
+    $this->assertParsedMdMatchesCorrespondingJson('comments', true);
   }
   public function testParseFile () {
     $this->assertParsedMdMatchesString('blank', '');
@@ -42,6 +43,35 @@ class HashdownTest extends TestCase {
     $this->assertParsedMdMatchesCorrespondingJson('blank-key-values');
     $this->assertParsedMdMatchesCorrespondingJson('page-builder');
     $this->assertParsedMdMatchesCorrespondingJson('auto-typing');
+    $this->assertParsedMdMatchesCorrespondingJson('comments');
+  }
+
+  public function testParseFileWithCommentsPreservesPhpOnFileRoundTrip() {
+    $this->assertFileOriginRoundTrip('comments.md');
+  }
+
+  public function testParsePageBuilderWithCommentsPreservesPhpOnFileRoundTrip() {
+    $this->assertFileOriginRoundTrip('page-builder.md');
+  }
+
+  private function assertFileOriginRoundTrip(string $s_md_filename): void {
+    $x_first_parse = Hashdown::x_read_file(__DIR__ . '/data/' . $s_md_filename);
+
+    $s_generated_file_path = __DIR__ . '/tmp/' . pathinfo($s_md_filename, PATHINFO_FILENAME) . '-file-roundtrip.generated.md';
+    if (file_exists($s_generated_file_path)) {
+      unlink($s_generated_file_path);
+    }
+
+    Hashdown::write_to_file($x_first_parse, $s_generated_file_path);
+    $x_second_parse = Hashdown::x_read_file($s_generated_file_path);
+
+    $this->assertSame(
+      $x_first_parse,
+      $x_second_parse,
+      'Parsing ' . $s_md_filename . ', writing, and parsing again should preserve the PHP values.'
+    );
+
+    unlink($s_generated_file_path);
   }
 
   private function x_get_parsed_data_from_md_file(string $s_file_path, bool $b_get_file_contents_as_string = false) {

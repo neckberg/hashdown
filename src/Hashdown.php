@@ -223,6 +223,38 @@ class Hashdown {
   }
 
   /**
+   * Removes HTML comments from a line outside of fenced literals.
+   *
+   * Supports full-line, multi-line, and inline <!-- ... --> comments.
+   *
+   * @param string $s_line The line to process.
+   * @param bool &$b_in_html_comment True when continuing a multi-line comment.
+   * @return string The line with comments removed.
+   */
+  private static function s_remove_html_comments_from_line(string $s_line, bool &$b_in_html_comment): string {
+    if ($b_in_html_comment) {
+      $i_end = strpos($s_line, '-->');
+      if ($i_end === false) {
+        return '';
+      }
+      $b_in_html_comment = false;
+      $s_line = substr($s_line, $i_end + 3);
+    }
+
+    while (($i_start = strpos($s_line, '<!--')) !== false) {
+      $i_end = strpos($s_line, '-->', $i_start);
+      if ($i_end === false) {
+        $s_line = substr($s_line, 0, $i_start);
+        $b_in_html_comment = true;
+        break;
+      }
+      $s_line = substr($s_line, 0, $i_start) . substr($s_line, $i_end + 3);
+    }
+
+    return $s_line;
+  }
+
+  /**
    * Calculates the number of consecutive occurrences of a specific character at the start of a string.
    *
    * @param string $s_character The target character to count occurrences of at the beginning of the string.
@@ -286,6 +318,7 @@ class Hashdown {
     $s_text_value_type_hint = '';
     $b_text_value_is_literal = false;
     $i_list_depth = 0;
+    $b_in_html_comment = false;
     $a_status = [''];
     foreach ($a_hd_lines as $i_line => $s_line) {
       $a_status = self::a_get_action_for_line(
@@ -299,7 +332,8 @@ class Hashdown {
         $s_file_path,
         $b_auto_type_scalars,
         $s_text_value_type_hint,
-        $b_text_value_is_literal
+        $b_text_value_is_literal,
+        $b_in_html_comment
       );
     }
     self::set_object_key($x_data, $a_key_cursor_location, self::x_parse_scalar(implode(PHP_EOL, $a_text_value_current), $b_auto_type_scalars, $s_text_value_type_hint, $b_text_value_is_literal));
@@ -320,7 +354,7 @@ class Hashdown {
    * @param string $s_file_path The path to the file being processed.
    * @return array The updated status.
    */
-  private static function a_get_action_for_line (string $s_line, array $a_status, &$a_key_cursor_location, &$i_list_depth, &$x_data, &$a_text_value_current, int $i_line, string $s_file_path, bool $b_auto_type_scalars = true, string &$s_text_value_type_hint = '', bool &$b_text_value_is_literal = false) {
+  private static function a_get_action_for_line (string $s_line, array $a_status, &$a_key_cursor_location, &$i_list_depth, &$x_data, &$a_text_value_current, int $i_line, string $s_file_path, bool $b_auto_type_scalars = true, string &$s_text_value_type_hint = '', bool &$b_text_value_is_literal = false, bool &$b_in_html_comment = false) {
 
     //  handle literals
     $i_literal_signature = self::i_leading_target_character_count('`', $s_line);
@@ -343,11 +377,15 @@ class Hashdown {
       return ['within_literal', $i_literal_signature, $s_text_value_type_hint, $b_text_value_is_literal];
     }
 
-    // always ignore whitespace if not within literal
-    if ( trim($s_line) === '' ) return ['ignore', 'whitespace'];
+    $s_line = self::s_remove_html_comments_from_line($s_line, $b_in_html_comment);
 
-    // // if line is a comment
-    // if ( substr(trim($s_line), 0, 1) === '\\' ) return ['ignore', 'comment'];  // this is actually just a single, escaped backslash
+    // ignore blank lines and comment-only lines, preserving active scalar context
+    if ( trim($s_line) === '' ) {
+      if ($a_status[0] === '' || $a_status[0] === 'ignore') {
+        return ['ignore', 'whitespace'];
+      }
+      return $a_status;
+    }
 
     $a_line_type = self::a_line_type_summary($s_line);
 
@@ -437,7 +475,7 @@ class Hashdown {
     }
     $is_key_or_value_present = $i_first_space ? $i_first_space < (strlen($s_line) - 1) : false;
     if ($is_key_or_value_present) {
-      $s_key_or_value = substr($s_line, $i_first_space + 1);
+      $s_key_or_value = trim(substr($s_line, $i_first_space + 1));
     }
     return [
       $a_special_chars[$s_char_0],
