@@ -99,9 +99,10 @@ class HashdownTest extends TestCase {
   }
 
   public function testParseExplicitScalarTypes() {
-    $x_expected = [
-      'float_value_unambiguous' => 3.14,
-      'float_value_ambiguous' => 3.0,
+    $x_original = [
+      'float' => 3.14,
+      'float_dot_zero' => 4.0,
+      'float_coerced' => (float) 4,
       'bool_true' => true,
       'string_true' => 'true',
       'string_false' => 'false',
@@ -114,12 +115,59 @@ class HashdownTest extends TestCase {
       'string_quoted' => '"123"',
     ];
 
-    $x_from_md = Hashdown::x_read_file(__DIR__ . '/data/write-read-roundtrip-scalar.json.md');
+    $this->assertWriteReadRoundTrip($x_original, 'write-read-roundtrip-scalar');
+  }
+
+  public function testWriteReadRoundTripWhitespace() {
+    $x_original = [
+      'leading_and_blank_lines' => "  some text\n\n\nsome more text",
+      'trailing_space' => 'content...   ',
+      'indented_line' => "line one\n    indented",
+    ];
+
+    $this->assertWriteReadRoundTrip($x_original, 'write-read-roundtrip-whitespace');
+  }
+
+  public function testWriteReadRoundTripMarkdownLiteral() {
+    $x_original = [
+      'content' => rtrim(file_get_contents(__DIR__ . '/data/single-scalar-value-literal.txt')),
+    ];
+
+    $this->assertWriteReadRoundTrip($x_original, 'write-read-roundtrip-markdown-literal');
+  }
+
+  public function testWriteReadRoundTripNestedLiteral() {
+    $x_original = [
+      'content' => rtrim(file_get_contents(__DIR__ . '/data/scalar-nested-literal.txt')),
+    ];
+
+    $this->assertWriteReadRoundTrip($x_original, 'write-read-roundtrip-nested-literal');
+  }
+
+  private function assertWriteReadRoundTrip(array $x_original, string $s_fixture_basename): void {
+    $s_expected_fixture_path = __DIR__ . '/data/' . $s_fixture_basename . '.json.md';
+    $s_generated_file_path = __DIR__ . '/tmp/' . $s_fixture_basename . '.generated.md';
+    if (file_exists($s_generated_file_path)) {
+      unlink($s_generated_file_path);
+    }
+
+    Hashdown::write_to_file($x_original, $s_generated_file_path);
+    $this->assertFileExists($s_generated_file_path, 'Generated Markdown file should be created.');
+
     $this->assertSame(
-      $x_expected,
-      $x_from_md,
-      'Parsing explicit scalar markers must preserve unambiguous floats and typed floats.'
+      file_get_contents($s_expected_fixture_path),
+      file_get_contents($s_generated_file_path),
+      'Generated Markdown should match the expected round-trip fixture.'
     );
+
+    $x_from_md = Hashdown::x_read_file($s_generated_file_path);
+    $this->assertSame(
+      $x_original,
+      $x_from_md,
+      'Parsing the generated Markdown should round-trip back to the original values.'
+    );
+
+    unlink($s_generated_file_path);
   }
 
   private function assertGeneratedMdFileMatchesExpected(string $s_src_filename, bool $b_no_shorthand_lists = false, bool $b_omit_numeric_array_keys = false, string $validation_file_suffix = '' ) {

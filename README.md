@@ -185,6 +185,63 @@ Literals can be nested within literals. The outer-most layer must have the most 
 # This is outside the literal, since the line above has 5 tick marks
 ``````
 
+### Auto-typing, escaping, and round-trips
+By default, Hashdown auto-types plain scalar text when parsing. The following table summarizes common cases:
+
+| Plain text | Parsed as |
+|---|---|
+| `true` / `false` | boolean |
+| `null` | `null` |
+| `123` | integer |
+| `3.14` / `3.0` | float |
+| `1.23e4` / `-1.23e4` | float (scientific notation) |
+| `007` | string (leading zeros are preserved) |
+| anything else | string |
+
+Scientific notation is recognized on read when the text matches a float literal — for example, `1.23e4` becomes the PHP float `12300.0`. To keep scientific notation as a **string** (e.g. the four-character string `1e6`), wrap it in inline backticks or use a fenced literal / `string` type hint.
+
+When **writing** floats, Hashdown uses decimal notation (e.g. `12300.0` rather than `1.23e4`). The numeric value is preserved on round-trip, but the exact text may change unless the value is stored as a string.
+
+#### Inline backticks
+A scalar wrapped in a **single** pair of backticks is always read as a string, with the backticks removed. Use this when the text looks like a boolean, number, or `null`, but should remain a string:
+
+```md
+# string-true
+`true`
+
+# string-int
+`123`
+
+# string-scientific
+`1e6`
+```
+
+The above evaluate to the PHP strings `'true'`, `'123'`, and `'1e6'` — not a boolean, integer, or float.
+
+Inline backticks are for **single-line** values. Multi-line strings that need whitespace or Markdown syntax preserved should use fenced literals (three or more backticks), as described above.
+
+#### Lossless round-trip serialization
+When writing with `write_to_file` or `s_stringify_x`, Hashdown formats scalars so that reading the file back yields the same PHP values:
+
+| PHP value | Written as |
+|---|---|
+| `null` | `null` |
+| `true` / `false` | `true` / `false` |
+| integer | decimal text (e.g. `123`) |
+| float | decimal text; whole-number floats include a fractional part (e.g. `3.0`, not `3`) |
+| string | plain text when unambiguous |
+| ambiguous string | inline backticks (e.g. `` `true` ``, `` `123` ``, `` `1e6` ``) |
+| string with leading zeros | plain text (e.g. `007`) |
+| string with whitespace, `#`, `-`, or multiple lines | fenced literal |
+
+A string is considered **ambiguous** when the same text would auto-type to a different PHP value on read. The serializer detects this automatically — you do not need to add backticks yourself when writing from PHP.
+
+Examples of unambiguous strings that are written without backticks: `007`, `"123"`, and ordinary text that does not match boolean, null, or numeric literals.
+
+Examples of ambiguous strings that receive backticks on write: `'true'`, `'123'`, `'1e6'`, `'null'`.
+
+Whole-number floats are written with an explicit decimal (e.g. `4.0`) so they are not mistaken for integers on read. Numeric type hints in fenced blocks (see below) are generally **not** needed for round-trips — they remain useful when hand-editing files and you want authoritative coercion regardless of the payload text.
+
 ### Explicit scalar type hints
 Scalar values can also be marked with an explicit type hint by placing the hint on the opening fence of a fenced block. Supported hints are `int`, `float`, `bool`, `null`, and `string`.
 

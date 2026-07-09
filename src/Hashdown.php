@@ -118,12 +118,13 @@ class Hashdown {
   /**
    * Echoes a scalar value, handling special characters and multiline content.
    *
-   * @param string $s_value The value to be echoed.
+   * @param mixed $x_value The value to be echoed.
    * @param bool $is_in_list Indicates if the value is part of a list.
    * @return bool Indicates if the value was multiline.
    */
-  private static function b_echo_scalar (?string $s_value, $is_in_list = false) {
-    if ( $s_value === '' || $s_value === null || $s_value === false ) {
+  private static function b_echo_scalar ($x_value, $is_in_list = false) {
+    $s_value = self::s_scalar_to_markdown_text($x_value);
+    if ( $s_value === '' ) {
       echo PHP_EOL;
       return;
     }
@@ -165,6 +166,60 @@ class Hashdown {
 
     echo PHP_EOL;
     return $is_multiline;
+  }
+
+  /**
+   * Converts a PHP scalar to its Hashdown text representation for writing.
+   *
+   * @param mixed $x_value The scalar value to convert.
+   * @return string The Markdown text for the scalar.
+   */
+  private static function s_scalar_to_markdown_text($x_value): string {
+    if ($x_value === null) {
+      return 'null';
+    }
+    if (is_bool($x_value)) {
+      return $x_value ? 'true' : 'false';
+    }
+    if (is_int($x_value)) {
+      return (string) $x_value;
+    }
+    if (is_float($x_value)) {
+      return self::s_format_float($x_value);
+    }
+    if (! is_string($x_value)) {
+      return (string) $x_value;
+    }
+    if (strpos($x_value, PHP_EOL) === false && self::b_string_needs_backticks($x_value)) {
+      return '`' . $x_value . '`';
+    }
+    return $x_value;
+  }
+
+  /**
+   * Formats a float for Hashdown output, preserving whole-number floats as "3.0".
+   *
+   * @param float $f The float value to format.
+   * @return string The formatted float text.
+   */
+  private static function s_format_float(float $f): string {
+    if (! is_finite($f)) {
+      return (string) $f;
+    }
+    if (fmod($f, 1.0) == 0.0) {
+      return sprintf('%d.0', (int) $f);
+    }
+    return (string) $f;
+  }
+
+  /**
+   * Returns true when a string would be auto-typed to a different value on read.
+   *
+   * @param string $s_value The string value to check.
+   * @return bool True if the string should be wrapped in backticks when writing.
+   */
+  private static function b_string_needs_backticks(string $s_value): bool {
+    return self::x_parse_scalar($s_value, true) !== $s_value;
   }
 
   /**

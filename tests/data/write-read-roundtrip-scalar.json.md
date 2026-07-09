@@ -1,10 +1,11 @@
-# float_value_unambiguous
+# float
 3.14
 
-# float_value_ambiguous
-```float
-3
-```
+# float_dot_zero
+4.0
+
+# float_coerced
+4.0
 
 # bool_true
 true
