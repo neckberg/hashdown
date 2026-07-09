@@ -46,6 +46,7 @@ Improvement opportunities from project review. Not necessarily in priority order
 
 ## Edge cases & robustness
 
+- [x] **Dash-list parse performance** — Replaced O(n²) sibling scan in `i_get_object_next_numeric_key` with per-parent numeric counters (`i_take_next_numeric_key` / `i_sync_numeric_key_counter`). 10k-item dash list parse ~695ms → ~9ms.
 - [ ] **Float edge cases** — `NAN`, `INF`, `-0.0`, very large floats, scientific notation on write. `s_format_float` handles non-finite values loosely; read/write behavior untested.
 - [ ] **Strings containing backticks** — e.g. a single-line string `` say `hello` `` may need literal fencing on write. Coverage unclear.
 - [ ] **Duplicate keys at same level** — PHP arrays last-wins. Hashdown doesn't warn when the same header key appears twice under one parent.

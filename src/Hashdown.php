@@ -319,6 +319,7 @@ class Hashdown {
     $b_text_value_is_literal = false;
     $i_list_depth = 0;
     $b_in_html_comment = false;
+    $a_next_numeric_key_by_parent_path = [];
     $a_status = [''];
     foreach ($a_hd_lines as $i_line => $s_line) {
       $a_status = self::a_get_action_for_line(
@@ -333,7 +334,8 @@ class Hashdown {
         $b_auto_type_scalars,
         $s_text_value_type_hint,
         $b_text_value_is_literal,
-        $b_in_html_comment
+        $b_in_html_comment,
+        $a_next_numeric_key_by_parent_path
       );
     }
     self::set_object_key($x_data, $a_key_cursor_location, self::x_parse_scalar(implode(PHP_EOL, $a_text_value_current), $b_auto_type_scalars, $s_text_value_type_hint, $b_text_value_is_literal));
@@ -354,7 +356,7 @@ class Hashdown {
    * @param string $s_file_path The path to the file being processed.
    * @return array The updated status.
    */
-  private static function a_get_action_for_line (string $s_line, array $a_status, &$a_key_cursor_location, &$i_list_depth, &$x_data, &$a_text_value_current, int $i_line, string $s_file_path, bool $b_auto_type_scalars = true, string &$s_text_value_type_hint = '', bool &$b_text_value_is_literal = false, bool &$b_in_html_comment = false) {
+  private static function a_get_action_for_line (string $s_line, array $a_status, &$a_key_cursor_location, &$i_list_depth, &$x_data, &$a_text_value_current, int $i_line, string $s_file_path, bool $b_auto_type_scalars = true, string &$s_text_value_type_hint = '', bool &$b_text_value_is_literal = false, bool &$b_in_html_comment = false, array &$a_next_numeric_key_by_parent_path = []) {
 
     //  handle literals
     $i_literal_signature = self::i_leading_target_character_count('`', $s_line);
@@ -424,7 +426,7 @@ class Hashdown {
       for ($i = $i_relative_hash_depth; $i < 1; $i++) {
         array_pop($a_key_cursor_location);  // use array_slice instead: array_slice($food, 0, -3);
       }
-      array_push($a_key_cursor_location, self::i_get_object_next_numeric_key($x_data, $a_key_cursor_location));
+      array_push($a_key_cursor_location, self::i_take_next_numeric_key($a_next_numeric_key_by_parent_path, $a_key_cursor_location));
       if ( $a_line_type[1] ) {
         array_push($a_text_value_current, $a_line_type[1]);
         return ['new_array'];
@@ -441,9 +443,12 @@ class Hashdown {
         array_pop($a_key_cursor_location);  // use array_slice instead: array_slice($food, 0, -3);
       }
       if ( $a_line_type[1] === '') {
-        array_push($a_key_cursor_location, self::i_get_object_next_numeric_key($x_data, $a_key_cursor_location));
+        array_push($a_key_cursor_location, self::i_take_next_numeric_key($a_next_numeric_key_by_parent_path, $a_key_cursor_location));
       }
-      else array_push($a_key_cursor_location, $a_line_type[1]);
+      else {
+        self::i_sync_numeric_key_counter($a_next_numeric_key_by_parent_path, $a_key_cursor_location, $a_line_type[1]);
+        array_push($a_key_cursor_location, $a_line_type[1]);
+      }
 
       return ['new_object'];
     }
@@ -485,31 +490,49 @@ class Hashdown {
   }
 
   /**
-   * Gets the next numeric key for an object in the array.
+   * Returns a stable map key for the next numeric index at a parent path.
    *
-   * @param array &$a_array The array to check.
-   * @param array $a_keys The current keys path.
+   * @param array $a_parent_keys The parent key path.
+   * @return string The parent path key.
+   */
+  private static function s_parent_path_key(array $a_parent_keys): string {
+    return implode("\0", $a_parent_keys);
+  }
+
+  /**
+   * Returns the next sequential numeric key for a parent and advances its counter.
+   *
+   * @param array &$a_next_numeric_key_by_parent_path Counters keyed by parent path.
+   * @param array $a_parent_keys The parent key path.
    * @return int The next numeric key.
    */
-  private static function i_get_object_next_numeric_key (&$a_array, $a_keys = []) {
-    $a_current = &$a_array;
-    foreach($a_keys as $s_key) {
-      $a_current = &$a_current[$s_key];
-      if ( ! is_array($a_current) ) {
-        // if one of the keys isn't an array, then it will be a brand new node, and so the '0' index will be available
-        return 0;
-      }
+  private static function i_take_next_numeric_key(array &$a_next_numeric_key_by_parent_path, array $a_parent_keys): int {
+    $s_parent_path = self::s_parent_path_key($a_parent_keys);
+    if (! isset($a_next_numeric_key_by_parent_path[$s_parent_path])) {
+      $a_next_numeric_key_by_parent_path[$s_parent_path] = 0;
     }
-    if ( ! is_array($a_current) ) return 0;
+    $i_key = $a_next_numeric_key_by_parent_path[$s_parent_path];
+    $a_next_numeric_key_by_parent_path[$s_parent_path]++;
+    return $i_key;
+  }
 
-    $highest = 0;
-    foreach ($a_current as $i => $dummy) {
-      if ( ! is_numeric($i) ) continue;
-      if ($i >= $highest) {
-        $highest = $i + 1;
-      }
+  /**
+   * Advances a parent numeric counter when an explicit numeric key is used.
+   *
+   * @param array &$a_next_numeric_key_by_parent_path Counters keyed by parent path.
+   * @param array $a_parent_keys The parent key path.
+   * @param string $s_key The explicit key from the line.
+   * @return void
+   */
+  private static function i_sync_numeric_key_counter(array &$a_next_numeric_key_by_parent_path, array $a_parent_keys, string $s_key): void {
+    if (! is_numeric($s_key)) {
+      return;
     }
-    return $highest;
+    $s_parent_path = self::s_parent_path_key($a_parent_keys);
+    $i_next = (int) $s_key + 1;
+    if (! isset($a_next_numeric_key_by_parent_path[$s_parent_path]) || $a_next_numeric_key_by_parent_path[$s_parent_path] < $i_next) {
+      $a_next_numeric_key_by_parent_path[$s_parent_path] = $i_next;
+    }
   }
 
   /**
