@@ -41,6 +41,7 @@ class HashdownTest extends TestCase {
     $this->assertParsedMdMatchesCorrespondingJson('person-first-last-name');
     $this->assertParsedMdMatchesCorrespondingJson('blank-key-values');
     $this->assertParsedMdMatchesCorrespondingJson('page-builder');
+    $this->assertParsedMdMatchesCorrespondingJson('auto-typing');
   }
 
   private function x_get_parsed_data_from_md_file(string $s_file_path, bool $b_get_file_contents_as_string = false) {

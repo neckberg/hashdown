@@ -188,15 +188,16 @@ class Hashdown {
    * Parses a Markdown file into a PHP associative array.
    *
    * @param string $s_file_path The path to the Markdown file.
+   * @param bool $b_auto_type_scalars If true, scalar values will be auto-typed.
    * @return array|false The associative array representation of the Markdown content, or false on failure.
    */
-  static function x_read_file ( string $s_file_path ) {
+  static function x_read_file ( string $s_file_path, bool $b_auto_type_scalars = true ) {
     if ( ! file_exists($s_file_path) ) {
       throw new \Exception('Failed to open non-existent file: ' . $s_file_path);
     }
 
     $a_md_lines = file($s_file_path, FILE_IGNORE_NEW_LINES);
-    return self::x_parse_md_lines($a_md_lines, $s_file_path);
+    return self::x_parse_md_lines($a_md_lines, $s_file_path, $b_auto_type_scalars);
   }
 
   /**
@@ -204,10 +205,11 @@ class Hashdown {
    *
    * @param string $s_hd_content String representing a Markdown document
    * @param string $s_line_delimeter The string marking the boundary between lines in the file. Default is PHP_EOL.
+   * @param bool $b_auto_type_scalars If true, scalar values will be auto-typed.
    * @return array|false The associative array representation of the Markdown content, or false on failure.
    */
-  static function x_parse_md_string ( string $a_hd_content, string $s_line_delimeter = PHP_EOL ) {
-    return self::x_parse_md_lines ( explode($s_line_delimeter, $a_hd_content) );
+  static function x_parse_md_string ( string $a_hd_content, string $s_line_delimeter = PHP_EOL, bool $b_auto_type_scalars = true ) {
+    return self::x_parse_md_lines ( explode($s_line_delimeter, $a_hd_content), '', $b_auto_type_scalars );
   }
 
   /**
@@ -215,9 +217,10 @@ class Hashdown {
    *
    * @param array $a_hd_lines Array of lines of a Markdown document
    * @param string $s_file_path The path to the Markdown file being parsed. only used for exception messaging.
+   * @param bool $b_auto_type_scalars If true, scalar values will be auto-typed.
    * @return array|false The associative array representation of the Markdown content, or false on failure.
    */
-  static function x_parse_md_lines ( array $a_hd_lines, string $s_file_path = '' ) {
+  static function x_parse_md_lines ( array $a_hd_lines, string $s_file_path = '', bool $b_auto_type_scalars = true ) {
     $is_in_literal = false;
     $x_data = [];
     $x_data_cursor = &$x_data;
@@ -225,12 +228,26 @@ class Hashdown {
     $i_object_key_current = -1;
     $s_object_key_current = '';
     $a_text_value_current = [];
+    $s_text_value_type_hint = '';
+    $b_text_value_is_literal = false;
     $i_list_depth = 0;
     $a_status = [''];
     foreach ($a_hd_lines as $i_line => $s_line) {
-      $a_status = self::a_get_action_for_line($s_line, $a_status, $a_key_cursor_location, $i_list_depth, $x_data, $a_text_value_current, $i_line, $s_file_path);
+      $a_status = self::a_get_action_for_line(
+        $s_line,
+        $a_status,
+        $a_key_cursor_location,
+        $i_list_depth,
+        $x_data,
+        $a_text_value_current,
+        $i_line,
+        $s_file_path,
+        $b_auto_type_scalars,
+        $s_text_value_type_hint,
+        $b_text_value_is_literal
+      );
     }
-    self::set_object_key($x_data, $a_key_cursor_location, implode(PHP_EOL, $a_text_value_current));
+    self::set_object_key($x_data, $a_key_cursor_location, self::x_parse_scalar(implode(PHP_EOL, $a_text_value_current), $b_auto_type_scalars, $s_text_value_type_hint, $b_text_value_is_literal));
     $a_text_value_current = [];
     return $x_data;
   }
@@ -248,16 +265,28 @@ class Hashdown {
    * @param string $s_file_path The path to the file being processed.
    * @return array The updated status.
    */
-  private static function a_get_action_for_line (string $s_line, array $a_status, &$a_key_cursor_location, &$i_list_depth, &$x_data, &$a_text_value_current, int $i_line, string $s_file_path) {
+  private static function a_get_action_for_line (string $s_line, array $a_status, &$a_key_cursor_location, &$i_list_depth, &$x_data, &$a_text_value_current, int $i_line, string $s_file_path, bool $b_auto_type_scalars = true, string &$s_text_value_type_hint = '', bool &$b_text_value_is_literal = false) {
 
     //  handle literals
     $i_literal_signature = self::i_leading_target_character_count('`', $s_line);
     if ($a_status[0] === 'within_literal') {
-      if ($i_literal_signature === $a_status[1]) return ['end_literal'];
+      if ($i_literal_signature === $a_status[1]) {
+        $s_text_value_type_hint = $a_status[2] ?? '';
+        $b_text_value_is_literal = $a_status[3] ?? false;
+        return ['end_literal'];
+      }
       array_push($a_text_value_current, $s_line);
       return $a_status;
     }
-    if ($i_literal_signature > 2) return ['within_literal', $i_literal_signature];
+    if ($i_literal_signature > 2) {
+      $s_fence_info = trim(substr($s_line, $i_literal_signature));
+      $s_text_value_type_hint = strtolower($s_fence_info);
+      $b_text_value_is_literal = ($s_text_value_type_hint === '');
+      if ($b_text_value_is_literal) {
+        $s_text_value_type_hint = '';
+      }
+      return ['within_literal', $i_literal_signature, $s_text_value_type_hint, $b_text_value_is_literal];
+    }
 
     // always ignore whitespace if not within literal
     if ( trim($s_line) === '' ) return ['ignore', 'whitespace'];
@@ -275,8 +304,10 @@ class Hashdown {
     // if we made it this far, it means we're about to make a new node
     // save off the waning node before making the new one
     if ($a_key_cursor_location) {
-      self::set_object_key($x_data, $a_key_cursor_location, implode(PHP_EOL, $a_text_value_current));
+      self::set_object_key($x_data, $a_key_cursor_location, self::x_parse_scalar(implode(PHP_EOL, $a_text_value_current), $b_auto_type_scalars, $s_text_value_type_hint, $b_text_value_is_literal));
       $a_text_value_current = [];
+      $s_text_value_type_hint = '';
+      $b_text_value_is_literal = false;
     }
 
     $i_max_hash_depth = ( count($a_key_cursor_location) - $i_list_depth ) + 1;
@@ -396,13 +427,88 @@ class Hashdown {
    * @param mixed $x_value The value to set.
    * @return void
    */
+private static function x_parse_scalar(string $s_value, bool $b_auto_type_scalars = true, string $s_type_hint = '', bool $b_is_literal = false) {
+    if ($b_is_literal) {
+      return $s_value;
+    }
+    $s_trimmed = trim($s_value);
+    if ($s_type_hint !== '') {
+      return self::x_cast_scalar($s_trimmed, $s_type_hint);
+    }
+    if (! $b_auto_type_scalars) {
+      return $s_value;
+    }
+    if ( self::b_is_inline_backtick_string($s_trimmed) ) {
+      return substr($s_trimmed, 1, -1);
+    }
+    return self::x_auto_type_scalar($s_trimmed);
+  }
+
+  private static function x_is_integer_literal(string $s_value) {
+    return preg_match('/^[+-]?(?:0|[1-9]\d*)$/', $s_value) === 1;
+  }
+
+  private static function x_is_float_literal(string $s_value) {
+    return preg_match('/^[+-]?(?:\d*\.\d+|\d+\.\d*)(?:[eE][+-]?\d+)?$/', $s_value) === 1;
+  }
+
+  private static function x_cast_scalar(string $s_value, string $s_type_hint) {
+    switch ($s_type_hint) {
+      case 'int':
+        return self::x_is_integer_literal($s_value) ? intval($s_value) : $s_value;
+      case 'float':
+        return self::x_is_float_literal($s_value) ? floatval($s_value) : $s_value;
+      case 'bool':
+        if (strcasecmp($s_value, 'true') === 0) return true;
+        if (strcasecmp($s_value, 'false') === 0) return false;
+        return $s_value;
+      case 'null':
+        return strcasecmp($s_value, 'null') === 0 ? null : $s_value;
+      case 'string':
+      default:
+        return $s_value;
+    }
+  }
+
+  private static function x_auto_type_scalar(string $s_value) {
+    if ($s_value === '') {
+      return '';
+    }
+    if (strcasecmp($s_value, 'null') === 0) {
+      return null;
+    }
+    if (strcasecmp($s_value, 'true') === 0) {
+      return true;
+    }
+    if (strcasecmp($s_value, 'false') === 0) {
+      return false;
+    }
+    if (self::x_is_integer_literal($s_value)) {
+      if ($s_value !== '0' && preg_match('/^0[0-9]+$/', $s_value)) {
+        return $s_value;
+      }
+      return intval($s_value);
+    }
+    if (self::x_is_float_literal($s_value)) {
+      return floatval($s_value);
+    }
+    return $s_value;
+  }
+
+  private static function b_is_inline_backtick_string(string $s_value) {
+    return strlen($s_value) >= 2
+      && $s_value[0] === '`'
+      && $s_value[strlen($s_value) - 1] === '`'
+      && strpos($s_value, PHP_EOL) === false;
+  }
+
   private static function set_object_key (&$a_array, $a_keys = [], $x_value = '') {
     $a_current = &$a_array;
     foreach($a_keys as $s_key) {
       $a_current = &$a_current[$s_key];
-    	if ( ! is_array($a_current) ) {
-    		$a_current = [];
-    	}
+      if ( ! is_array($a_current) ) {
+        $a_current = [];
+      }
     }
     $a_current = $x_value;
   }
