@@ -185,6 +185,50 @@ Literals can be nested within literals. The outer-most layer must have the most 
 # This is outside the literal, since the line above has 5 tick marks
 ``````
 
+### Explicit scalar type hints
+Scalar values can also be marked with an explicit type hint by placing the hint on the opening fence of a fenced block. Supported hints are `int`, `float`, `bool`, `null`, and `string`.
+
+Examples:
+```md
+# fenced-int
+```int
+123abc
+```
+```
+This evaluates to the PHP integer `123`.
+
+```md
+# fenced-float
+```float
+3
+```
+```
+This evaluates to the PHP float `3.0`.
+
+```md
+# fenced-bool
+```bool
+0
+```
+```
+This evaluates to the PHP boolean `false`.
+
+```md
+# fenced-null
+```null
+anything
+```
+```
+This evaluates to the PHP value `null`.
+
+With explicit hints, Hashdown uses the hint as authoritative and coerces the value accordingly. In practice this means:
+- `int` and `float` use PHP-style numeric coercion
+- `bool` uses PHP-style boolean coercion, including the semantics of whitespace and empty strings
+- `null` always becomes `null`, regardless of the payload content
+- `string` preserves the value as a string
+
+A future enhancement is planned for an `undefined`/`undef` sentinel that would omit the key entirely rather than producing `null`.
+
 ## Code examples
 ### Reading from an .md file
 Use Hashdown's static `x_read_file` method to read from / deserialize an .md file:

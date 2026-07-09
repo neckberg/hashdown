@@ -32,22 +32,101 @@ true
 
 # fenced-int
 ```int
-12
+123abc
+```
+
+# fenced-int-0
+```int
+abc123
+```
+
+# fenced-bool-false-zero
+```bool
+0
+```
+
+# fenced-bool-false-zero-dot-zero
+```bool
+0.0
+```
+
+# fenced-bool-false-empty
+```bool
+```
+
+# fenced-bool-false-false
+```bool
+False
+```
+
+# fenced-bool-false-null
+```bool
+null
+```
+
+# fenced-bool-true-decimal
+```bool
+0.1
+```
+
+# fenced-bool-true-abc
+```bool
+abc
+```
+
+# fenced-bool-true-whitespace
+```bool
+   
+```
+
+# fenced-bool-case-insensitive-true
+```bool
+TrUe
+```
+
+# fenced-null-case-insensitive
+```null
+nULL
+```
+
+# fenced-null-hint-overrides-payload
+```null
+something
+```
+
+# negative-int-without-hint
+-3
+
+# negative-float-without-hint
+-3.14
+
+# fenced-float-negative-hint
+```float
+-3
+```
+
+# fenced-int-negative-hint
+```int
+-3.14
 ```
 
 # fenced-float
 ```float
-3.14
+3
 ```
 
 # fenced-bool
 ```bool
-true
+1
 ```
 
 # fenced-null
 ```null
-null
+```
+
+# fenced-null-invalid
+```null
+123
 ```
 
 # fenced-string

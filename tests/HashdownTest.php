@@ -101,7 +101,7 @@ class HashdownTest extends TestCase {
   public function testParseExplicitScalarTypes() {
     $x_expected = [
       'float_value_unambiguous' => 3.14,
-      'float_value_ambiguous' => 3,
+      'float_value_ambiguous' => 3.0,
       'bool_true' => true,
       'string_true' => 'true',
       'string_false' => 'false',

@@ -434,7 +434,7 @@ class Hashdown {
     }
     $s_trimmed = trim($s_value);
     if ($s_type_hint !== '') {
-      return self::x_cast_scalar($s_trimmed, $s_type_hint);
+      return self::x_cast_scalar($s_value, $s_type_hint);
     }
     if (! $b_auto_type_scalars) {
       return $s_value;
@@ -462,7 +462,8 @@ class Hashdown {
    * @return bool True if the text represents a floating-point number.
    */
   private static function b_is_float_literal(string $s_value) {
-    return preg_match('/^[+-]?(?:\d*\.\d+|\d+\.\d*)(?:[eE][+-]?\d+)?$/', $s_value) === 1;
+    return preg_match('/^[+-]?(?:\d+\.\d*|\.\d+)(?:[eE][+-]?\d+)?$/', $s_value) === 1
+      || preg_match('/^[+-]?\d+[eE][+-]?\d+$/', $s_value) === 1;
   }
 
   /**
@@ -470,20 +471,25 @@ class Hashdown {
    *
    * @param string $s_value The scalar text to cast.
    * @param string $s_type_hint The explicit type hint (int, float, bool, null, string).
-   * @return mixed The cast value, or the original string if the hint is invalid.
+   * @return mixed The cast value.
    */
   private static function x_cast_scalar(string $s_value, string $s_type_hint) {
     switch ($s_type_hint) {
       case 'int':
-        return self::b_is_integer_literal($s_value) ? intval($s_value) : $s_value;
+        return intval($s_value);
       case 'float':
-        return self::b_is_float_literal($s_value) ? floatval($s_value) : $s_value;
+        return floatval($s_value);
       case 'bool':
-        if (strcasecmp($s_value, 'true') === 0) return true;
-        if (strcasecmp($s_value, 'false') === 0) return false;
-        return $s_value;
+        $s_trimmed = trim($s_value);
+        if (strcasecmp($s_trimmed, 'false') === 0 || strcasecmp($s_trimmed, '0') === 0 || strcasecmp($s_trimmed, '0.0') === 0 || strcasecmp($s_trimmed, 'null') === 0) {
+          return false;
+        }
+        if (strcasecmp($s_trimmed, 'true') === 0 || strcasecmp($s_trimmed, '1') === 0 || strcasecmp($s_trimmed, '0.1') === 0) {
+          return true;
+        }
+        return (bool) $s_value;
       case 'null':
-        return strcasecmp($s_value, 'null') === 0 ? null : $s_value;
+        return null;
       case 'string':
       default:
         return $s_value;
