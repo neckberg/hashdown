@@ -125,6 +125,10 @@ Twinkie
 Diet Coke
 ```
 
+In short: `-` is only for **scalar** list items. Nested objects/arrays under a dash item are not allowed — use empty `#` headers for those list items instead.
+
+Nested dash lists are also not supported. Hashdown does not use multi-dash markers (`--`, `---`) or indentation-based nested lists. Only a single `-` is valid list syntax, matching Markdown unordered lists for flat scalar values.
+
 ### Literals and Code blocks
 #### Escaping embedded Markdown syntax
 If you need to represent Markdown as scalar content within your .md document, you can escape it using Markdown's code block syntax.
@@ -347,14 +351,17 @@ Exact limits depend on structure: many small keys cost more per entry than a few
 
 ### Errors you may see
 
+Parse and I/O failures throw `\Exception`. Parse errors include the line number, file path when available, the offending line, and a plain-language explanation.
+
 | Cause | Symptom |
 |---|---|
 | `memory_limit` exceeded | PHP fatal error (most common at scale) |
 | `max_execution_time` exceeded | `Maximum execution time exceeded` (if configured) |
-| Write failure | `Failed to write to file...` |
-| Invalid structure | `Invalid node depth at line N...` |
+| Missing file | `Failed to open non-existent file: ...` |
+| Write failure | `Failed to write to file ... Check permissions and file path.` |
+| Invalid structure | Parse error with line number and reason (e.g. skipped header level, unsupported `--` list marker, dash list under a scalar, unterminated fence or `<!--` comment) |
 
-For very large files in the future, streaming parse/write (processing incrementally without loading everything into memory) would be the architectural next step. That is not implemented today.
+In the future, we may support very large files via streaming parse/write, rather than loading everything into memory. That is not implemented today.
 
 ## Code examples
 ### Reading from an .md file
@@ -386,17 +393,21 @@ Diet Coke
 ```php
 [
   'Groceries' => [
-    'Name' => 'Twinkie',
-    'Ingredients' => [
-      'sugar',
-      'water',
-      'enriched flour',
+    [
+      'Name' => 'Twinkie',
+      'Ingredients' => [
+        'sugar',
+        'water',
+        'enriched flour',
+      ],
     ],
-    'Name' => 'Diet Coke',
-    'Ingredients' => [
-      'carbonated water',
-      'caramel color',
-      'aspartame',
+    [
+      'Name' => 'Diet Coke',
+      'Ingredients' => [
+        'carbonated water',
+        'caramel color',
+        'aspartame',
+      ],
     ],
   ],
 ];
@@ -411,17 +422,21 @@ use Neckberg\Hashdown\Hashdown;
 
 $x_groceries = [
   'Groceries' => [
-    'Name' => 'Twinkie',
-    'Ingredients' => [
-      'sugar',
-      'water',
-      'enriched flour',
+    [
+      'Name' => 'Twinkie',
+      'Ingredients' => [
+        'sugar',
+        'water',
+        'enriched flour',
+      ],
     ],
-    'Name' => 'Diet Coke',
-    'Ingredients' => [
-      'carbonated water',
-      'caramel color',
-      'aspartame',
+    [
+      'Name' => 'Diet Coke',
+      'Ingredients' => [
+        'carbonated water',
+        'caramel color',
+        'aspartame',
+      ],
     ],
   ],
 ];
@@ -516,7 +531,7 @@ aspartame
 
 ##### Only allow "hash" style lists, and omit sequential keys where possible
 ```php
-Hashdown::write_to_file($x_groceries, '.../Groceries.md', false, false);
+Hashdown::write_to_file($x_groceries, '.../Groceries.md', true, true);
 ```
 ```md
 # Groceries
@@ -552,15 +567,24 @@ aspartame
 ### Reading and writing to / from strings and arrays
 In addition to writing and reading directly to and from .md files, you can also manipulate md strings directly, using the following functions:
 #### x_parse_md_string
-Accepts a string of Markdown content, and returns a corresponding PHP associative array, or false on failure.
+Accepts a string of Markdown content, and returns a corresponding PHP array (or scalar for a document that is only a scalar value). Throws `\Exception` on invalid Hashdown structure.
 ##### Parameters
 - string `$s_hd_content` String representing a Markdown document
 - string `$s_line_delimeter` The string marking the boundary between lines in the file. Default is PHP_EOL.
+- bool `$b_auto_type_scalars` If true (default), scalar values are auto-typed.
 
 #### x_parse_md_lines
-Accepts an array of Markdown lines, and returns a corresponding PHP associative array, or false on failure.
+Accepts an array of Markdown lines, and returns a corresponding PHP array (or scalar). Throws `\Exception` on invalid Hashdown structure.
 ##### Parameters
 - array `$a_hd_lines` Array of lines of a Markdown document
+- string `$s_file_path` Optional path used only in exception messages. Default is `''`.
+- bool `$b_auto_type_scalars` If true (default), scalar values are auto-typed.
+
+#### x_read_file
+Reads a Markdown file from disk and returns a corresponding PHP array (or scalar). Throws `\Exception` if the file does not exist or the content is invalid Hashdown.
+##### Parameters
+- string `$s_file_path` Path to the Markdown file
+- bool `$b_auto_type_scalars` If true (default), scalar values are auto-typed.
 
 #### s_stringify_x
 Accepts a PHP associative array or object, and returns a corresponding Markdown string.

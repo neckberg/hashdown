@@ -27,7 +27,7 @@ class Hashdown {
    */
   static function write_to_file ($x_data, string $s_file_name, bool $b_no_shorthand_lists = false, bool $b_omit_numeric_array_keys = false) {
     $s_hd_markup = self::s_stringify_x($x_data, $b_no_shorthand_lists, $b_omit_numeric_array_keys);
-    if ( file_put_contents($s_file_name, $s_hd_markup) === false ) {
+    if ( @file_put_contents($s_file_name, $s_hd_markup) === false ) {
       throw new \Exception('Failed to write to file ' . $s_file_name . '. Check permissions and file path.');
     }
   }
@@ -229,15 +229,27 @@ class Hashdown {
    *
    * @param string $s_line The line to process.
    * @param bool &$b_in_html_comment True when continuing a multi-line comment.
+   * @param int $i_line Zero-based line index of $s_line.
+   * @param int &$i_html_comment_start_line Zero-based line where the open comment began.
+   * @param string &$s_html_comment_start_line Content of the line where the open comment began.
    * @return string The line with comments removed.
    */
-  private static function s_remove_html_comments_from_line(string $s_line, bool &$b_in_html_comment): string {
+  private static function s_remove_html_comments_from_line(
+    string $s_line,
+    bool &$b_in_html_comment,
+    int $i_line = 0,
+    int &$i_html_comment_start_line = -1,
+    string &$s_html_comment_start_line = ''
+  ): string {
+    $s_original_line = $s_line;
     if ($b_in_html_comment) {
       $i_end = strpos($s_line, '-->');
       if ($i_end === false) {
         return '';
       }
       $b_in_html_comment = false;
+      $i_html_comment_start_line = -1;
+      $s_html_comment_start_line = '';
       $s_line = substr($s_line, $i_end + 3);
     }
 
@@ -246,6 +258,8 @@ class Hashdown {
       if ($i_end === false) {
         $s_line = substr($s_line, 0, $i_start);
         $b_in_html_comment = true;
+        $i_html_comment_start_line = $i_line;
+        $s_html_comment_start_line = $s_original_line;
         break;
       }
       $s_line = substr($s_line, 0, $i_start) . substr($s_line, $i_end + 3);
@@ -276,7 +290,8 @@ class Hashdown {
    *
    * @param string $s_file_path The path to the Markdown file.
    * @param bool $b_auto_type_scalars If true, scalar values will be auto-typed.
-   * @return array|false The associative array representation of the Markdown content, or false on failure.
+   * @return mixed The associative array (or scalar) representation of the Markdown content.
+   * @throws \Exception If the file does not exist or the Markdown is invalid Hashdown.
    */
   static function x_read_file ( string $s_file_path, bool $b_auto_type_scalars = true ) {
     if ( ! file_exists($s_file_path) ) {
@@ -293,7 +308,8 @@ class Hashdown {
    * @param string $s_hd_content String representing a Markdown document
    * @param string $s_line_delimeter The string marking the boundary between lines in the file. Default is PHP_EOL.
    * @param bool $b_auto_type_scalars If true, scalar values will be auto-typed.
-   * @return array|false The associative array representation of the Markdown content, or false on failure.
+   * @return mixed The associative array (or scalar) representation of the Markdown content.
+   * @throws \Exception If the Markdown is invalid Hashdown.
    */
   static function x_parse_md_string ( string $a_hd_content, string $s_line_delimeter = PHP_EOL, bool $b_auto_type_scalars = true ) {
     return self::x_parse_md_lines ( explode($s_line_delimeter, $a_hd_content), '', $b_auto_type_scalars );
@@ -305,7 +321,8 @@ class Hashdown {
    * @param array $a_hd_lines Array of lines of a Markdown document
    * @param string $s_file_path The path to the Markdown file being parsed. only used for exception messaging.
    * @param bool $b_auto_type_scalars If true, scalar values will be auto-typed.
-   * @return array|false The associative array representation of the Markdown content, or false on failure.
+   * @return mixed The associative array (or scalar) representation of the Markdown content.
+   * @throws \Exception If the Markdown is invalid Hashdown.
    */
   static function x_parse_md_lines ( array $a_hd_lines, string $s_file_path = '', bool $b_auto_type_scalars = true ) {
     $is_in_literal = false;
@@ -319,6 +336,8 @@ class Hashdown {
     $b_text_value_is_literal = false;
     $i_list_depth = 0;
     $b_in_html_comment = false;
+    $i_html_comment_start_line = -1;
+    $s_html_comment_start_line = '';
     $a_next_numeric_key_by_parent_path = [];
     $a_status = [''];
     foreach ($a_hd_lines as $i_line => $s_line) {
@@ -335,8 +354,26 @@ class Hashdown {
         $s_text_value_type_hint,
         $b_text_value_is_literal,
         $b_in_html_comment,
-        $a_next_numeric_key_by_parent_path
+        $a_next_numeric_key_by_parent_path,
+        $i_html_comment_start_line,
+        $s_html_comment_start_line
       );
+    }
+    if ($a_status[0] === 'within_literal') {
+      throw new \Exception(self::s_parse_error_message(
+        'Unterminated fenced literal: opened with ' . str_repeat('`', $a_status[1]) . ' but never closed',
+        $a_status[4] ?? (count($a_hd_lines) - 1),
+        $a_status[5] ?? (end($a_hd_lines) === false ? '' : (string) end($a_hd_lines)),
+        $s_file_path
+      ));
+    }
+    if ($b_in_html_comment) {
+      throw new \Exception(self::s_parse_error_message(
+        'Unterminated HTML comment: opened with <!-- but never closed with -->',
+        $i_html_comment_start_line,
+        $s_html_comment_start_line,
+        $s_file_path
+      ));
     }
     self::set_object_key($x_data, $a_key_cursor_location, self::x_parse_scalar(implode(PHP_EOL, $a_text_value_current), $b_auto_type_scalars, $s_text_value_type_hint, $b_text_value_is_literal));
     $a_text_value_current = [];
@@ -356,7 +393,7 @@ class Hashdown {
    * @param string $s_file_path The path to the file being processed.
    * @return array The updated status.
    */
-  private static function a_get_action_for_line (string $s_line, array $a_status, &$a_key_cursor_location, &$i_list_depth, &$x_data, &$a_text_value_current, int $i_line, string $s_file_path, bool $b_auto_type_scalars = true, string &$s_text_value_type_hint = '', bool &$b_text_value_is_literal = false, bool &$b_in_html_comment = false, array &$a_next_numeric_key_by_parent_path = []) {
+  private static function a_get_action_for_line (string $s_line, array $a_status, &$a_key_cursor_location, &$i_list_depth, &$x_data, &$a_text_value_current, int $i_line, string $s_file_path, bool $b_auto_type_scalars = true, string &$s_text_value_type_hint = '', bool &$b_text_value_is_literal = false, bool &$b_in_html_comment = false, array &$a_next_numeric_key_by_parent_path = [], int &$i_html_comment_start_line = -1, string &$s_html_comment_start_line = '') {
 
     //  handle literals
     $i_literal_signature = self::i_leading_target_character_count('`', $s_line);
@@ -376,10 +413,16 @@ class Hashdown {
       if ($b_text_value_is_literal) {
         $s_text_value_type_hint = '';
       }
-      return ['within_literal', $i_literal_signature, $s_text_value_type_hint, $b_text_value_is_literal];
+      return ['within_literal', $i_literal_signature, $s_text_value_type_hint, $b_text_value_is_literal, $i_line, $s_line];
     }
 
-    $s_line = self::s_remove_html_comments_from_line($s_line, $b_in_html_comment);
+    $s_line = self::s_remove_html_comments_from_line(
+      $s_line,
+      $b_in_html_comment,
+      $i_line,
+      $i_html_comment_start_line,
+      $s_html_comment_start_line
+    );
 
     // ignore blank lines and comment-only lines, preserving active scalar context
     if ( trim($s_line) === '' ) {
@@ -417,8 +460,26 @@ class Hashdown {
     }
 
     if ( $a_line_type[0] === 'array' ) {
+      if ( $a_line_type[2] > 1 ) {
+        throw new \Exception(self::s_parse_error_message(
+          'Unsupported list marker '
+            . self::s_depth_marker('-', $a_line_type[2])
+            . ': Hashdown only supports a single "-" for scalar list items (Markdown unordered-list style). '
+            . 'Nested dash lists are not supported, and multi-dash markers like "--" are not Markdown list syntax. '
+            . 'For nested structures, use "#" headers for all but the deepest level.',
+          $i_line,
+          $s_line,
+          $s_file_path
+        ));
+      }
       if ( $a_line_type[2] > $i_max_list_depth ) {
-        throw new \Exception('Invalid node depth at line ' . ($i_line + 1) . ': ' . $s_line);
+        throw new \Exception(self::s_parse_error_message(
+          'Invalid list placement: a "-" list item is not allowed here. '
+            . 'Dash lists are only for scalar values under a header (or as a top-level list)',
+          $i_line,
+          $s_line,
+          $s_file_path
+        ));
       }
 
       $i_relative_hash_depth = $a_line_type[2] - $i_list_depth;
@@ -436,7 +497,24 @@ class Hashdown {
     $i_list_depth = 0;
     if ( $a_line_type[0] === 'object' ) {
       if ( $a_line_type[2] > $i_max_hash_depth ) {
-        throw new \Exception('Invalid node depth at line ' . ($i_line + 1) . ': ' . $s_line);
+        // Always report the mechanical depth failure. When the previous node was a
+        // "-" list item, also explain the dash-list limitation — intent is ambiguous
+        // (nested under "-" vs moving on to another key at the wrong depth).
+        $s_reason = 'Invalid header depth: got ' . self::s_depth_marker('#', $a_line_type[2])
+          . ' (depth ' . $a_line_type[2] . '), but the maximum allowed here is '
+          . self::s_depth_marker('#', $i_max_hash_depth) . ' (depth ' . $i_max_hash_depth . '). '
+          . 'Header levels cannot be skipped.';
+        if ($a_status[0] === 'new_array') {
+          $s_reason .= ' If this "#" header was meant as nested data under the preceding "-" list item: '
+            . 'dash lists only support scalar values. '
+            . 'For list items with nested keys, use an empty "#" header instead of "-".';
+        }
+        throw new \Exception(self::s_parse_error_message(
+          $s_reason,
+          $i_line,
+          $s_line,
+          $s_file_path
+        ));
       }
       $i_relative_hash_depth = $a_line_type[2] - count($a_key_cursor_location);
       for ($i = $i_relative_hash_depth; $i < 1; $i++) {
@@ -452,6 +530,48 @@ class Hashdown {
 
       return ['new_object'];
     }
+  }
+
+  /**
+   * Builds a parse error message with location and the offending line.
+   *
+   * @param string $s_reason What went wrong.
+   * @param int $i_line Zero-based line index.
+   * @param string $s_line The offending line content.
+   * @param string $s_file_path Optional file path for location context.
+   * @return string The formatted exception message.
+   */
+  private static function s_parse_error_message(string $s_reason, int $i_line, string $s_line, string $s_file_path = ''): string {
+    $s_line_display = $s_line === '' ? '(empty line)' : $s_line;
+    return $s_reason . ' at ' . self::s_parse_error_location($i_line, $s_file_path) . ': ' . $s_line_display;
+  }
+
+  /**
+   * Formats the location portion of a parse error (line number and optional file path).
+   *
+   * @param int $i_line Zero-based line index.
+   * @param string $s_file_path Optional file path.
+   * @return string e.g. "line 3" or "line 3 of path/to/file.md".
+   */
+  private static function s_parse_error_location(int $i_line, string $s_file_path = ''): string {
+    $i_display_line = $i_line + 1;
+    return $s_file_path !== ''
+      ? 'line ' . $i_display_line . ' of ' . $s_file_path
+      : 'line ' . $i_display_line;
+  }
+
+  /**
+   * Formats a depth marker string for error messages.
+   *
+   * @param string $s_character '#' for headers or '-' for lists.
+   * @param int $i_depth The depth to represent.
+   * @return string Repeated marker characters, or a readable fallback for depth 0.
+   */
+  private static function s_depth_marker(string $s_character, int $i_depth): string {
+    if ($i_depth < 1) {
+      return '(no ' . ($s_character === '#' ? 'header' : 'list') . ' allowed here)';
+    }
+    return str_repeat($s_character, $i_depth);
   }
 
   /**

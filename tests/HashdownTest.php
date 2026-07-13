@@ -241,19 +241,144 @@ class HashdownTest extends TestCase {
   }
 
   public function testReadNonexistentFile () {
-    $this->assertThrowExceptionOnRead('<nonexistent filename>', 'Failed to open non-existent file');
-  }
-  public function testBadListDepth () {
-    $this->assertThrowExceptionOnRead('bad-list-depth', 'Invalid node depth at line 4: ###');  // /Users/nathan.eckberg/local-sites/php/app/public/hashdown/tests/data/bad-list-depth.md
-  }
-  public function testBadHashDepth () {
-    $this->assertThrowExceptionOnRead('bad-hash-depth', 'Invalid node depth at line 2: ### 0');  // /Users/nathan.eckberg/local-sites/php/app/public/hashdown/tests/data/bad-hash-depth.md
-  }
-  public function assertThrowExceptionOnRead (string $s_filename, string $s_message = '') {
-    $this->expectException(\Exception::class);
-    if ($s_message) {
-      $this->expectExceptionMessage($s_message);
+    $s_file_path = __DIR__ . '/data/<nonexistent filename>.md';
+    try {
+      Hashdown::x_read_file($s_file_path);
+      $this->fail('Expected an exception');
     }
-    $x_from_md = Hashdown::x_read_file( __DIR__ . '/data/' . $s_filename . '.md' );
+    catch (\Exception $e) {
+      $this->assertSame(
+        'Failed to open non-existent file: ' . $s_file_path,
+        $e->getMessage()
+      );
+    }
+  }
+
+  public function testBadListDepth () {
+    $s_file_path = __DIR__ . '/data/bad-list-depth.md';
+    try {
+      Hashdown::x_read_file($s_file_path);
+      $this->fail('Expected an exception');
+    }
+    catch (\Exception $e) {
+      $this->assertSame(
+        'Unsupported list marker --: Hashdown only supports a single "-" for scalar list items (Markdown unordered-list style). '
+        . 'Nested dash lists are not supported, and multi-dash markers like "--" are not Markdown list syntax. '
+        . 'For nested structures, use "#" headers for all but the deepest level. '
+        . 'at line 2 of ' . $s_file_path . ': -- groceries',
+        $e->getMessage()
+      );
+    }
+  }
+
+  public function testBadHashDepth () {
+    $s_file_path = __DIR__ . '/data/bad-hash-depth.md';
+    try {
+      Hashdown::x_read_file($s_file_path);
+      $this->fail('Expected an exception');
+    }
+    catch (\Exception $e) {
+      $this->assertSame(
+        'Invalid header depth: got ### (depth 3), but the maximum allowed here is ## (depth 2). '
+        . 'Header levels cannot be skipped. '
+        . 'at line 3 of ' . $s_file_path . ': ### 0',
+        $e->getMessage()
+      );
+    }
+  }
+
+  public function testBadHashDepth2 () {
+    $s_file_path = __DIR__ . '/data/bad-hash-depth-2.md';
+    try {
+      Hashdown::x_read_file($s_file_path);
+      $this->fail('Expected an exception');
+    }
+    catch (\Exception $e) {
+      $this->assertSame(
+        'Invalid header depth: got ### (depth 3), but the maximum allowed here is ## (depth 2). '
+        . 'Header levels cannot be skipped. '
+        . 'at line 6 of ' . $s_file_path . ': ### 1',
+        $e->getMessage()
+      );
+    }
+  }
+
+  public function testBadComplexUnderDashList () {
+    $s_file_path = __DIR__ . '/data/bad-complex-under-dash-list.md';
+    try {
+      Hashdown::x_read_file($s_file_path);
+      $this->fail('Expected an exception');
+    }
+    catch (\Exception $e) {
+      $this->assertSame(
+        'Invalid header depth: got ## (depth 2), but the maximum allowed here is # (depth 1). '
+        . 'Header levels cannot be skipped. '
+        . 'If this "#" header was meant as nested data under the preceding "-" list item: '
+        . 'dash lists only support scalar values. '
+        . 'For list items with nested keys, use an empty "#" header instead of "-". '
+        . 'at line 4 of ' . $s_file_path . ': ## Name',
+        $e->getMessage()
+      );
+    }
+  }
+
+  public function testBadUnterminatedLiteral () {
+    $s_file_path = __DIR__ . '/data/bad-unterminated-literal.md';
+    try {
+      Hashdown::x_read_file($s_file_path);
+      $this->fail('Expected an exception');
+    }
+    catch (\Exception $e) {
+      $this->assertSame(
+        'Unterminated fenced literal: opened with ``` but never closed '
+        . 'at line 3 of ' . $s_file_path . ': ```',
+        $e->getMessage()
+      );
+    }
+  }
+
+  public function testBadUnterminatedComment () {
+    $s_file_path = __DIR__ . '/data/bad-unterminated-comment.md';
+    try {
+      Hashdown::x_read_file($s_file_path);
+      $this->fail('Expected an exception');
+    }
+    catch (\Exception $e) {
+      $this->assertSame(
+        'Unterminated HTML comment: opened with <!-- but never closed with --> '
+        . 'at line 5 of ' . $s_file_path . ': <!-- never closed',
+        $e->getMessage()
+      );
+    }
+  }
+
+  public function testBadListPlacement () {
+    $s_file_path = __DIR__ . '/data/bad-list-placement.md';
+    try {
+      Hashdown::x_read_file($s_file_path);
+      $this->fail('Expected an exception');
+    }
+    catch (\Exception $e) {
+      $this->assertSame(
+        'Invalid list placement: a "-" list item is not allowed here. '
+        . 'Dash lists are only for scalar values under a header (or as a top-level list) '
+        . 'at line 5 of ' . $s_file_path . ': - item',
+        $e->getMessage()
+      );
+    }
+  }
+
+  public function testWriteToInvalidPath () {
+    $s_file_path = __DIR__ . '/data'; // directory, not a writable file
+    try {
+      Hashdown::write_to_file(['key' => 'value'], $s_file_path);
+      $this->fail('Expected an exception');
+    }
+    catch (\Exception $e) {
+      $this->assertSame(
+        'Failed to write to file ' . $s_file_path . '. Check permissions and file path.',
+        $e->getMessage()
+      );
+    }
   }
 }

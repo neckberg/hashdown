@@ -10,18 +10,10 @@
 
 ---
 
-## User priorities
-
-- [ ] **Better parse errors** — Replace generic `\Exception` messages with structured errors: file path (when available), **line number**, the **offending line**, and a **plain-language explanation** of what went wrong (not just "Invalid node depth"). Introduce something like `HashdownParseException` with those fields.
-
----
-
 Improvement opportunities from project review. Not necessarily in priority order.
 
 ## High value — correctness & docs
 
-- [ ] **Fix README groceries example** — The parser produces a proper list of objects (`Groceries => [ {Name, Ingredients}, ... ]`), but the README PHP example shows duplicate keys (`'Name' =>` twice), which isn't valid PHP and doesn't match real behavior.
-- [ ] **Align `false on failure` docs with code** — `x_parse_md_string` / `x_parse_md_lines` are documented as returning `array|false`, but they always return an array or throw. Either implement structured parse errors or update docs/return types.
 - [ ] **Resolve PHP version mismatch** — `composer.json` allows PHP `^7.4`, but PHPUnit 11 requires PHP 8.2+. Bump library minimum to 8.2 or downgrade PHPUnit for broader PHP support.
 - [ ] **Full-document round-trip tests** — Add write → read → assert-same for remaining fixtures (`person`, `todo-list`, `auto-typing`). (`page-builder` and `comments` already have file-origin round-trips.)
 - [ ] **`auto-typing` list round-trip** — `auto-typing.md` includes a `list-items` dash list with mixed types. Currently parse-only; a round-trip test would exercise list serialization + auto-typing together.
@@ -60,14 +52,12 @@ Improvement opportunities from project review. Not necessarily in priority order
 - Round-trip coverage for scalars, whitespace, literals, and comments
 - README documents auto-typing, inline backticks, serialization, comments, and limits/performance
 - Lossless scalar serialization design
-- Error cases for bad hash/list depth
+- Error cases for bad hash/list depth, complex structure under dash lists, and unterminated fences (clear line + reason messages)
 - Dash-list parse performance (O(n) implicit numeric keys)
 
 ## Suggested starting shortlist
 
-1. **Better parse exceptions** (user priority)
-2. Full-document round-trips (`person`, `todo-list`, `auto-typing`)
-3. Fix README groceries example + `false on failure` doc mismatch
-4. Align PHP version requirements
-5. Add CI
-6. `undefined` sentinel
+1. Full-document round-trips (`person`, `todo-list`, `auto-typing`)
+2. Align PHP version requirements
+3. Add CI
+4. `undefined` sentinel
