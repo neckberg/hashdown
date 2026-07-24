@@ -174,6 +174,23 @@ class HashdownTest extends TestCase {
     $this->assertWriteReadRoundTrip($x_original, 'write-read-roundtrip-nested-literal');
   }
 
+  public function testWriteReadRoundTripSlashes() {
+    // Backslashes are ordinary scalar characters — Hashdown does not escape them.
+    // (An early draft treated leading "\" as a comment marker; that was abandoned
+    // because it collided with Windows paths and PHP's own \\ string escaping.)
+    $x_original = [
+      'windows_path' => 'C:\Users\nathan\file.txt',
+      'unix_path' => '/Users/nathan/file.txt',
+      'leading_backslash' => '\not-a-comment',
+      'trailing_backslash' => 'path\\',
+      'only_backslash' => '\\',
+      'unc_style' => '\\\\server\\share',
+      'slash_paths' => ['/usr/bin', 'a\b', '\e'],
+    ];
+
+    $this->assertWriteReadRoundTrip($x_original, 'write-read-roundtrip-slashes');
+  }
+
   private function assertWriteReadRoundTrip(array $x_original, string $s_fixture_basename): void {
     $s_expected_fixture_path = __DIR__ . '/data/' . $s_fixture_basename . '.json.md';
     $s_generated_file_path = __DIR__ . '/tmp/' . $s_fixture_basename . '.generated.md';

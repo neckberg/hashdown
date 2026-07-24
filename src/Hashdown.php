@@ -131,10 +131,8 @@ class Hashdown {
 
     $a_values = explode(PHP_EOL, $s_value);
     $a_special_chars = [
-      // '>' => true,
       '#' => true,
       '-' => true,
-      '\\' => true,
     ];
     $b_needs_to_be_literal = false;
     $i_literal_size = 3;
@@ -325,12 +323,8 @@ class Hashdown {
    * @throws \Exception If the Markdown is invalid Hashdown.
    */
   static function x_parse_md_lines ( array $a_hd_lines, string $s_file_path = '', bool $b_auto_type_scalars = true ) {
-    $is_in_literal = false;
     $x_data = [];
-    $x_data_cursor = &$x_data;
     $a_key_cursor_location = [];
-    $i_object_key_current = -1;
-    $s_object_key_current = '';
     $a_text_value_current = [];
     $s_text_value_type_hint = '';
     $b_text_value_is_literal = false;
@@ -585,8 +579,6 @@ class Hashdown {
     $a_special_chars = [
       '#' => 'object',
       '-' => 'array',
-      // '>' => 1,
-      // '\\' => 1,
     ];
     $s_char_0 = $s_line[0];
     $default_return = [false, false, false];  // header, key, and level

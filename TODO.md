@@ -14,14 +14,12 @@ Improvement opportunities from project review. Not necessarily in priority order
 
 ## High value — correctness & docs
 
-- [ ] **Resolve PHP version mismatch** — `composer.json` allows PHP `^7.4`, but PHPUnit 11 requires PHP 8.2+. Bump library minimum to 8.2 or downgrade PHPUnit for broader PHP support.
 - [ ] **Full-document round-trip tests** — Add write → read → assert-same for remaining fixtures (`person`, `todo-list`, `auto-typing`). (`page-builder` and `comments` already have file-origin round-trips.)
 - [ ] **`auto-typing` list round-trip** — `auto-typing.md` includes a `list-items` dash list with mixed types. Currently parse-only; a round-trip test would exercise list serialization + auto-typing together.
 
 ## Code quality
 
 - [ ] **Consider splitting `Hashdown.php`** — ~600 lines covering parse, write, typing, and literals. Still manageable, but a `Parser` / `Writer` / `ScalarCodec` split may help as features grow.
-- [ ] **Remove dead/stale parser code** — Unused variables in `x_parse_md_lines` (`$is_in_literal`, `$x_data_cursor`, etc.). Commented-out `>` blockquote support — implement or remove.
 - [ ] **Replace echo + output buffering for string building** — `s_stringify_x` uses `ob_start()` / `echo`. Accumulating into a string would be easier to test and reason about.
 - [ ] **Guard `a_line_type_summary` against empty lines** — `$s_line[0]` on an empty string after `ltrim` could warn on PHP 8+. Probably unreachable, but a guard would be defensive.
 
@@ -58,6 +56,5 @@ Improvement opportunities from project review. Not necessarily in priority order
 ## Suggested starting shortlist
 
 1. Full-document round-trips (`person`, `todo-list`, `auto-typing`)
-2. Align PHP version requirements
-3. Add CI
-4. `undefined` sentinel
+2. Add CI
+3. `undefined` sentinel
