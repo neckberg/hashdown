@@ -1,5 +1,7 @@
+<!-- Page builder fixture: nested blocks, literals, lists, and inline comments -->
+
 # name
-About
+About <!-- page title -->
 
 # id
 123
@@ -7,13 +9,17 @@ About
 # path
 /about
 
+<!--
+Main layout: primary content row plus a sidebar widget area.
+-->
+
 # content blocks
 ## 0
 ### width
 8
 
 ### type
-parent block
+parent block <!-- row layout -->
 
 ### child blocks
 #### 0
@@ -27,10 +33,10 @@ card
 star.svg
 
 ##### title
-Yay
+Yay <!-- first card -->
 
 ##### text
-Lorem Ipsum...
+Lorem Ipsum... <!-- excerpt -->
 Dolor sit amet...
 
 ##### link
@@ -61,7 +67,7 @@ Dolor sit amet...
 
 ##### link
 ###### url
-https://example.com
+https://example.com <!-- external -->
 
 ###### text
 Learn more
@@ -100,7 +106,7 @@ Learn more
 wysiwyg
 
 ##### content
-Lorem ipsum dolor
+Lorem ipsum dolor <!-- inline in multiline scalar -->
 Sit amet conspectitur
 
 #### 4
@@ -114,13 +120,13 @@ blog preview
 3
 
 ##### categories
-- news
+- news <!-- primary -->
 - events
 - spotlight
 
 ## 1
 ### width
-4
+4 <!-- sidebar column -->
 
 ### type
 widget area

@@ -1,0 +1,11 @@
+{
+  "Name": "Jane",
+  "Eye color": "Blue",
+  "Notes": "Line one\nLine two",
+  "todo": [
+    "laundry",
+    "groceries"
+  ],
+  "literal": "# header <!-- not a comment -->\nstill literal",
+  "header-inline": "header value"
+}

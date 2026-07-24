@@ -3,7 +3,7 @@
   "description": "A PHP package for translating Markdown to and from PHP associative arrays.",
   "type": "library",
   "require": {
-    "php": "^7.4 || ^8.0"
+    "php": "^8.2"
   },
   "require-dev": {
     "phpunit/phpunit": "^11.0"

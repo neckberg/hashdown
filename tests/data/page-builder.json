@@ -1,14 +1,14 @@
 {
   "name": "About",
-  "id": "123",
+  "id": 123,
   "path": "/about",
   "content blocks": [
     {
-      "width": "8",
+      "width": 8,
       "type": "parent block",
       "child blocks": [
         {
-          "width": "4",
+          "width": 4,
           "type": "card",
           "icon": "star.svg",
           "title": "Yay",
@@ -19,7 +19,7 @@
           }
         },
         {
-          "width": "4",
+          "width": 4,
           "type": "card",
           "icon": "thumbsup.svg",
           "title": "Good",
@@ -30,7 +30,7 @@
           }
         },
         {
-          "width": "4",
+          "width": 4,
           "type": "card",
           "icon": "check.svg",
           "title": "Done",
@@ -41,14 +41,14 @@
           }
         },
         {
-          "width": "12",
+          "width": 12,
           "type": "wysiwyg",
           "content": "Lorem ipsum dolor\nSit amet conspectitur"
         },
         {
-          "width": "12",
+          "width": 12,
           "type": "blog preview",
-          "max articles to show": "3",
+          "max articles to show": 3,
           "categories": [
             "news",
             "events",
@@ -58,7 +58,7 @@
       ]
     },
     {
-      "width": "4",
+      "width": 4,
       "type": "widget area",
       "widget area": "right_sidebar"
     }

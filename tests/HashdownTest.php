@@ -27,6 +27,7 @@ class HashdownTest extends TestCase {
     $this->assertParsedMdMatchesCorrespondingJson('person-first-last-name', true);
     $this->assertParsedMdMatchesCorrespondingJson('blank-key-values', true);
     $this->assertParsedMdMatchesCorrespondingJson('page-builder', true);
+    $this->assertParsedMdMatchesCorrespondingJson('comments', true);
   }
   public function testParseFile () {
     $this->assertParsedMdMatchesString('blank', '');
@@ -41,6 +42,36 @@ class HashdownTest extends TestCase {
     $this->assertParsedMdMatchesCorrespondingJson('person-first-last-name');
     $this->assertParsedMdMatchesCorrespondingJson('blank-key-values');
     $this->assertParsedMdMatchesCorrespondingJson('page-builder');
+    $this->assertParsedMdMatchesCorrespondingJson('auto-typing');
+    $this->assertParsedMdMatchesCorrespondingJson('comments');
+  }
+
+  public function testParseFileWithCommentsPreservesPhpOnFileRoundTrip() {
+    $this->assertFileOriginRoundTrip('comments.md');
+  }
+
+  public function testParsePageBuilderWithCommentsPreservesPhpOnFileRoundTrip() {
+    $this->assertFileOriginRoundTrip('page-builder.md');
+  }
+
+  private function assertFileOriginRoundTrip(string $s_md_filename): void {
+    $x_first_parse = Hashdown::x_read_file(__DIR__ . '/data/' . $s_md_filename);
+
+    $s_generated_file_path = __DIR__ . '/tmp/' . pathinfo($s_md_filename, PATHINFO_FILENAME) . '-file-roundtrip.generated.md';
+    if (file_exists($s_generated_file_path)) {
+      unlink($s_generated_file_path);
+    }
+
+    Hashdown::write_to_file($x_first_parse, $s_generated_file_path);
+    $x_second_parse = Hashdown::x_read_file($s_generated_file_path);
+
+    $this->assertSame(
+      $x_first_parse,
+      $x_second_parse,
+      'Parsing ' . $s_md_filename . ', writing, and parsing again should preserve the PHP values.'
+    );
+
+    unlink($s_generated_file_path);
   }
 
   private function x_get_parsed_data_from_md_file(string $s_file_path, bool $b_get_file_contents_as_string = false) {
@@ -97,6 +128,95 @@ class HashdownTest extends TestCase {
     $this->assertGeneratedMdFileMatchesExpected('page-builder.json', false, true, 'dash-lists_omit-numeric-keys');
   }
 
+  public function testParseExplicitScalarTypes() {
+    $x_original = [
+      'float' => 3.14,
+      'float_dot_zero' => 4.0,
+      'float_coerced' => (float) 4,
+      'bool_true' => true,
+      'string_true' => 'true',
+      'string_false' => 'false',
+      'null_null' => null,
+      'string_null' => 'null',
+      'int_int' => 123,
+      'string_int' => '123',
+      'string_leading_zero' => '007',
+      'string_scientific' => '1e6',
+      'string_quoted' => '"123"',
+    ];
+
+    $this->assertWriteReadRoundTrip($x_original, 'write-read-roundtrip-scalar');
+  }
+
+  public function testWriteReadRoundTripWhitespace() {
+    $x_original = [
+      'leading_and_blank_lines' => "  some text\n\n\nsome more text",
+      'trailing_space' => 'content...   ',
+      'indented_line' => "line one\n    indented",
+    ];
+
+    $this->assertWriteReadRoundTrip($x_original, 'write-read-roundtrip-whitespace');
+  }
+
+  public function testWriteReadRoundTripMarkdownLiteral() {
+    $x_original = [
+      'content' => rtrim(file_get_contents(__DIR__ . '/data/single-scalar-value-literal.txt')),
+    ];
+
+    $this->assertWriteReadRoundTrip($x_original, 'write-read-roundtrip-markdown-literal');
+  }
+
+  public function testWriteReadRoundTripNestedLiteral() {
+    $x_original = [
+      'content' => rtrim(file_get_contents(__DIR__ . '/data/scalar-nested-literal.txt')),
+    ];
+
+    $this->assertWriteReadRoundTrip($x_original, 'write-read-roundtrip-nested-literal');
+  }
+
+  public function testWriteReadRoundTripSlashes() {
+    // Backslashes are ordinary scalar characters — Hashdown does not escape them.
+    // (An early draft treated leading "\" as a comment marker; that was abandoned
+    // because it collided with Windows paths and PHP's own \\ string escaping.)
+    $x_original = [
+      'windows_path' => 'C:\Users\nathan\file.txt',
+      'unix_path' => '/Users/nathan/file.txt',
+      'leading_backslash' => '\not-a-comment',
+      'trailing_backslash' => 'path\\',
+      'only_backslash' => '\\',
+      'unc_style' => '\\\\server\\share',
+      'slash_paths' => ['/usr/bin', 'a\b', '\e'],
+    ];
+
+    $this->assertWriteReadRoundTrip($x_original, 'write-read-roundtrip-slashes');
+  }
+
+  private function assertWriteReadRoundTrip(array $x_original, string $s_fixture_basename): void {
+    $s_expected_fixture_path = __DIR__ . '/data/' . $s_fixture_basename . '.json.md';
+    $s_generated_file_path = __DIR__ . '/tmp/' . $s_fixture_basename . '.generated.md';
+    if (file_exists($s_generated_file_path)) {
+      unlink($s_generated_file_path);
+    }
+
+    Hashdown::write_to_file($x_original, $s_generated_file_path);
+    $this->assertFileExists($s_generated_file_path, 'Generated Markdown file should be created.');
+
+    $this->assertSame(
+      file_get_contents($s_expected_fixture_path),
+      file_get_contents($s_generated_file_path),
+      'Generated Markdown should match the expected round-trip fixture.'
+    );
+
+    $x_from_md = Hashdown::x_read_file($s_generated_file_path);
+    $this->assertSame(
+      $x_original,
+      $x_from_md,
+      'Parsing the generated Markdown should round-trip back to the original values.'
+    );
+
+    unlink($s_generated_file_path);
+  }
+
   private function assertGeneratedMdFileMatchesExpected(string $s_src_filename, bool $b_no_shorthand_lists = false, bool $b_omit_numeric_array_keys = false, string $validation_file_suffix = '' ) {
     if ($validation_file_suffix) {
       $validation_file_suffix = '-' . $validation_file_suffix;
@@ -138,19 +258,144 @@ class HashdownTest extends TestCase {
   }
 
   public function testReadNonexistentFile () {
-    $this->assertThrowExceptionOnRead('<nonexistent filename>', 'Failed to open non-existent file');
-  }
-  public function testBadListDepth () {
-    $this->assertThrowExceptionOnRead('bad-list-depth', 'Invalid node depth at line 4: ###');  // /Users/nathan.eckberg/local-sites/php/app/public/hashdown/tests/data/bad-list-depth.md
-  }
-  public function testBadHashDepth () {
-    $this->assertThrowExceptionOnRead('bad-hash-depth', 'Invalid node depth at line 2: ### 0');  // /Users/nathan.eckberg/local-sites/php/app/public/hashdown/tests/data/bad-hash-depth.md
-  }
-  public function assertThrowExceptionOnRead (string $s_filename, string $s_message = '') {
-    $this->expectException(\Exception::class);
-    if ($s_message) {
-      $this->expectExceptionMessage($s_message);
+    $s_file_path = __DIR__ . '/data/<nonexistent filename>.md';
+    try {
+      Hashdown::x_read_file($s_file_path);
+      $this->fail('Expected an exception');
     }
-    $x_from_md = Hashdown::x_read_file( __DIR__ . '/data/' . $s_filename . '.md' );
+    catch (\Exception $e) {
+      $this->assertSame(
+        'Failed to open non-existent file: ' . $s_file_path,
+        $e->getMessage()
+      );
+    }
+  }
+
+  public function testBadListDepth () {
+    $s_file_path = __DIR__ . '/data/bad-list-depth.md';
+    try {
+      Hashdown::x_read_file($s_file_path);
+      $this->fail('Expected an exception');
+    }
+    catch (\Exception $e) {
+      $this->assertSame(
+        'Unsupported list marker --: Hashdown only supports a single "-" for scalar list items (Markdown unordered-list style). '
+        . 'Nested dash lists are not supported, and multi-dash markers like "--" are not Markdown list syntax. '
+        . 'For nested structures, use "#" headers for all but the deepest level. '
+        . 'at line 2 of ' . $s_file_path . ': -- groceries',
+        $e->getMessage()
+      );
+    }
+  }
+
+  public function testBadHashDepth () {
+    $s_file_path = __DIR__ . '/data/bad-hash-depth.md';
+    try {
+      Hashdown::x_read_file($s_file_path);
+      $this->fail('Expected an exception');
+    }
+    catch (\Exception $e) {
+      $this->assertSame(
+        'Invalid header depth: got ### (depth 3), but the maximum allowed here is ## (depth 2). '
+        . 'Header levels cannot be skipped. '
+        . 'at line 3 of ' . $s_file_path . ': ### 0',
+        $e->getMessage()
+      );
+    }
+  }
+
+  public function testBadHashDepth2 () {
+    $s_file_path = __DIR__ . '/data/bad-hash-depth-2.md';
+    try {
+      Hashdown::x_read_file($s_file_path);
+      $this->fail('Expected an exception');
+    }
+    catch (\Exception $e) {
+      $this->assertSame(
+        'Invalid header depth: got ### (depth 3), but the maximum allowed here is ## (depth 2). '
+        . 'Header levels cannot be skipped. '
+        . 'at line 6 of ' . $s_file_path . ': ### 1',
+        $e->getMessage()
+      );
+    }
+  }
+
+  public function testBadComplexUnderDashList () {
+    $s_file_path = __DIR__ . '/data/bad-complex-under-dash-list.md';
+    try {
+      Hashdown::x_read_file($s_file_path);
+      $this->fail('Expected an exception');
+    }
+    catch (\Exception $e) {
+      $this->assertSame(
+        'Invalid header depth: got ## (depth 2), but the maximum allowed here is # (depth 1). '
+        . 'Header levels cannot be skipped. '
+        . 'If this "#" header was meant as nested data under the preceding "-" list item: '
+        . 'dash lists only support scalar values. '
+        . 'For list items with nested keys, use an empty "#" header instead of "-". '
+        . 'at line 4 of ' . $s_file_path . ': ## Name',
+        $e->getMessage()
+      );
+    }
+  }
+
+  public function testBadUnterminatedLiteral () {
+    $s_file_path = __DIR__ . '/data/bad-unterminated-literal.md';
+    try {
+      Hashdown::x_read_file($s_file_path);
+      $this->fail('Expected an exception');
+    }
+    catch (\Exception $e) {
+      $this->assertSame(
+        'Unterminated fenced literal: opened with ``` but never closed '
+        . 'at line 3 of ' . $s_file_path . ': ```',
+        $e->getMessage()
+      );
+    }
+  }
+
+  public function testBadUnterminatedComment () {
+    $s_file_path = __DIR__ . '/data/bad-unterminated-comment.md';
+    try {
+      Hashdown::x_read_file($s_file_path);
+      $this->fail('Expected an exception');
+    }
+    catch (\Exception $e) {
+      $this->assertSame(
+        'Unterminated HTML comment: opened with <!-- but never closed with --> '
+        . 'at line 5 of ' . $s_file_path . ': <!-- never closed',
+        $e->getMessage()
+      );
+    }
+  }
+
+  public function testBadListPlacement () {
+    $s_file_path = __DIR__ . '/data/bad-list-placement.md';
+    try {
+      Hashdown::x_read_file($s_file_path);
+      $this->fail('Expected an exception');
+    }
+    catch (\Exception $e) {
+      $this->assertSame(
+        'Invalid list placement: a "-" list item is not allowed here. '
+        . 'Dash lists are only for scalar values under a header (or as a top-level list) '
+        . 'at line 5 of ' . $s_file_path . ': - item',
+        $e->getMessage()
+      );
+    }
+  }
+
+  public function testWriteToInvalidPath () {
+    $s_file_path = __DIR__ . '/data'; // directory, not a writable file
+    try {
+      Hashdown::write_to_file(['key' => 'value'], $s_file_path);
+      $this->fail('Expected an exception');
+    }
+    catch (\Exception $e) {
+      $this->assertSame(
+        'Failed to write to file ' . $s_file_path . '. Check permissions and file path.',
+        $e->getMessage()
+      );
+    }
   }
 }

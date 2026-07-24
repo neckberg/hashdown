@@ -1,5 +1,2 @@
 # todo
-- laundry
-
-###
-groceries
+-- groceries

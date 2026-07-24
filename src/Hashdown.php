@@ -27,7 +27,7 @@ class Hashdown {
    */
   static function write_to_file ($x_data, string $s_file_name, bool $b_no_shorthand_lists = false, bool $b_omit_numeric_array_keys = false) {
     $s_hd_markup = self::s_stringify_x($x_data, $b_no_shorthand_lists, $b_omit_numeric_array_keys);
-    if ( file_put_contents($s_file_name, $s_hd_markup) === false ) {
+    if ( @file_put_contents($s_file_name, $s_hd_markup) === false ) {
       throw new \Exception('Failed to write to file ' . $s_file_name . '. Check permissions and file path.');
     }
   }
@@ -118,22 +118,21 @@ class Hashdown {
   /**
    * Echoes a scalar value, handling special characters and multiline content.
    *
-   * @param string $s_value The value to be echoed.
+   * @param mixed $x_value The value to be echoed.
    * @param bool $is_in_list Indicates if the value is part of a list.
    * @return bool Indicates if the value was multiline.
    */
-  private static function b_echo_scalar (?string $s_value, $is_in_list = false) {
-    if ( $s_value === '' || $s_value === null || $s_value === false ) {
+  private static function b_echo_scalar ($x_value, $is_in_list = false) {
+    $s_value = self::s_scalar_to_markdown_text($x_value);
+    if ( $s_value === '' ) {
       echo PHP_EOL;
       return;
     }
 
     $a_values = explode(PHP_EOL, $s_value);
     $a_special_chars = [
-      // '>' => true,
       '#' => true,
       '-' => true,
-      '\\' => true,
     ];
     $b_needs_to_be_literal = false;
     $i_literal_size = 3;
@@ -168,6 +167,106 @@ class Hashdown {
   }
 
   /**
+   * Converts a PHP scalar to its Hashdown text representation for writing.
+   *
+   * @param mixed $x_value The scalar value to convert.
+   * @return string The Markdown text for the scalar.
+   */
+  private static function s_scalar_to_markdown_text($x_value): string {
+    if ($x_value === null) {
+      return 'null';
+    }
+    if (is_bool($x_value)) {
+      return $x_value ? 'true' : 'false';
+    }
+    if (is_int($x_value)) {
+      return (string) $x_value;
+    }
+    if (is_float($x_value)) {
+      return self::s_format_float($x_value);
+    }
+    if (! is_string($x_value)) {
+      return (string) $x_value;
+    }
+    if (strpos($x_value, PHP_EOL) === false && self::b_string_needs_backticks($x_value)) {
+      return '`' . $x_value . '`';
+    }
+    return $x_value;
+  }
+
+  /**
+   * Formats a float for Hashdown output, preserving whole-number floats as "3.0".
+   *
+   * @param float $f The float value to format.
+   * @return string The formatted float text.
+   */
+  private static function s_format_float(float $f): string {
+    if (! is_finite($f)) {
+      return (string) $f;
+    }
+    if (fmod($f, 1.0) == 0.0) {
+      return sprintf('%d.0', (int) $f);
+    }
+    return (string) $f;
+  }
+
+  /**
+   * Returns true when a string would be auto-typed to a different value on read.
+   *
+   * @param string $s_value The string value to check.
+   * @return bool True if the string should be wrapped in backticks when writing.
+   */
+  private static function b_string_needs_backticks(string $s_value): bool {
+    return self::x_parse_scalar($s_value, true) !== $s_value;
+  }
+
+  /**
+   * Removes HTML comments from a line outside of fenced literals.
+   *
+   * Supports full-line, multi-line, and inline <!-- ... --> comments.
+   *
+   * @param string $s_line The line to process.
+   * @param bool &$b_in_html_comment True when continuing a multi-line comment.
+   * @param int $i_line Zero-based line index of $s_line.
+   * @param int &$i_html_comment_start_line Zero-based line where the open comment began.
+   * @param string &$s_html_comment_start_line Content of the line where the open comment began.
+   * @return string The line with comments removed.
+   */
+  private static function s_remove_html_comments_from_line(
+    string $s_line,
+    bool &$b_in_html_comment,
+    int $i_line = 0,
+    int &$i_html_comment_start_line = -1,
+    string &$s_html_comment_start_line = ''
+  ): string {
+    $s_original_line = $s_line;
+    if ($b_in_html_comment) {
+      $i_end = strpos($s_line, '-->');
+      if ($i_end === false) {
+        return '';
+      }
+      $b_in_html_comment = false;
+      $i_html_comment_start_line = -1;
+      $s_html_comment_start_line = '';
+      $s_line = substr($s_line, $i_end + 3);
+    }
+
+    while (($i_start = strpos($s_line, '<!--')) !== false) {
+      $i_end = strpos($s_line, '-->', $i_start);
+      if ($i_end === false) {
+        $s_line = substr($s_line, 0, $i_start);
+        $b_in_html_comment = true;
+        $i_html_comment_start_line = $i_line;
+        $s_html_comment_start_line = $s_original_line;
+        break;
+      }
+      $s_line = substr($s_line, 0, $i_start) . substr($s_line, $i_end + 3);
+    }
+
+    return $s_line;
+  }
+
+  /**
    * Calculates the number of consecutive occurrences of a specific character at the start of a string.
    *
    * @param string $s_character The target character to count occurrences of at the beginning of the string.
@@ -188,15 +287,17 @@ class Hashdown {
    * Parses a Markdown file into a PHP associative array.
    *
    * @param string $s_file_path The path to the Markdown file.
-   * @return array|false The associative array representation of the Markdown content, or false on failure.
+   * @param bool $b_auto_type_scalars If true, scalar values will be auto-typed.
+   * @return mixed The associative array (or scalar) representation of the Markdown content.
+   * @throws \Exception If the file does not exist or the Markdown is invalid Hashdown.
    */
-  static function x_read_file ( string $s_file_path ) {
+  static function x_read_file ( string $s_file_path, bool $b_auto_type_scalars = true ) {
     if ( ! file_exists($s_file_path) ) {
       throw new \Exception('Failed to open non-existent file: ' . $s_file_path);
     }
 
     $a_md_lines = file($s_file_path, FILE_IGNORE_NEW_LINES);
-    return self::x_parse_md_lines($a_md_lines, $s_file_path);
+    return self::x_parse_md_lines($a_md_lines, $s_file_path, $b_auto_type_scalars);
   }
 
   /**
@@ -204,10 +305,12 @@ class Hashdown {
    *
    * @param string $s_hd_content String representing a Markdown document
    * @param string $s_line_delimeter The string marking the boundary between lines in the file. Default is PHP_EOL.
-   * @return array|false The associative array representation of the Markdown content, or false on failure.
+   * @param bool $b_auto_type_scalars If true, scalar values will be auto-typed.
+   * @return mixed The associative array (or scalar) representation of the Markdown content.
+   * @throws \Exception If the Markdown is invalid Hashdown.
    */
-  static function x_parse_md_string ( string $a_hd_content, string $s_line_delimeter = PHP_EOL ) {
-    return self::x_parse_md_lines ( explode($s_line_delimeter, $a_hd_content) );
+  static function x_parse_md_string ( string $a_hd_content, string $s_line_delimeter = PHP_EOL, bool $b_auto_type_scalars = true ) {
+    return self::x_parse_md_lines ( explode($s_line_delimeter, $a_hd_content), '', $b_auto_type_scalars );
   }
 
   /**
@@ -215,22 +318,58 @@ class Hashdown {
    *
    * @param array $a_hd_lines Array of lines of a Markdown document
    * @param string $s_file_path The path to the Markdown file being parsed. only used for exception messaging.
-   * @return array|false The associative array representation of the Markdown content, or false on failure.
+   * @param bool $b_auto_type_scalars If true, scalar values will be auto-typed.
+   * @return mixed The associative array (or scalar) representation of the Markdown content.
+   * @throws \Exception If the Markdown is invalid Hashdown.
    */
-  static function x_parse_md_lines ( array $a_hd_lines, string $s_file_path = '' ) {
-    $is_in_literal = false;
+  static function x_parse_md_lines ( array $a_hd_lines, string $s_file_path = '', bool $b_auto_type_scalars = true ) {
     $x_data = [];
-    $x_data_cursor = &$x_data;
     $a_key_cursor_location = [];
-    $i_object_key_current = -1;
-    $s_object_key_current = '';
     $a_text_value_current = [];
+    $s_text_value_type_hint = '';
+    $b_text_value_is_literal = false;
     $i_list_depth = 0;
+    $b_in_html_comment = false;
+    $i_html_comment_start_line = -1;
+    $s_html_comment_start_line = '';
+    $a_next_numeric_key_by_parent_path = [];
     $a_status = [''];
     foreach ($a_hd_lines as $i_line => $s_line) {
-      $a_status = self::a_get_action_for_line($s_line, $a_status, $a_key_cursor_location, $i_list_depth, $x_data, $a_text_value_current, $i_line, $s_file_path);
+      $a_status = self::a_get_action_for_line(
+        $s_line,
+        $a_status,
+        $a_key_cursor_location,
+        $i_list_depth,
+        $x_data,
+        $a_text_value_current,
+        $i_line,
+        $s_file_path,
+        $b_auto_type_scalars,
+        $s_text_value_type_hint,
+        $b_text_value_is_literal,
+        $b_in_html_comment,
+        $a_next_numeric_key_by_parent_path,
+        $i_html_comment_start_line,
+        $s_html_comment_start_line
+      );
     }
-    self::set_object_key($x_data, $a_key_cursor_location, implode(PHP_EOL, $a_text_value_current));
+    if ($a_status[0] === 'within_literal') {
+      throw new \Exception(self::s_parse_error_message(
+        'Unterminated fenced literal: opened with ' . str_repeat('`', $a_status[1]) . ' but never closed',
+        $a_status[4] ?? (count($a_hd_lines) - 1),
+        $a_status[5] ?? (end($a_hd_lines) === false ? '' : (string) end($a_hd_lines)),
+        $s_file_path
+      ));
+    }
+    if ($b_in_html_comment) {
+      throw new \Exception(self::s_parse_error_message(
+        'Unterminated HTML comment: opened with <!-- but never closed with -->',
+        $i_html_comment_start_line,
+        $s_html_comment_start_line,
+        $s_file_path
+      ));
+    }
+    self::set_object_key($x_data, $a_key_cursor_location, self::x_parse_scalar(implode(PHP_EOL, $a_text_value_current), $b_auto_type_scalars, $s_text_value_type_hint, $b_text_value_is_literal));
     $a_text_value_current = [];
     return $x_data;
   }
@@ -248,22 +387,44 @@ class Hashdown {
    * @param string $s_file_path The path to the file being processed.
    * @return array The updated status.
    */
-  private static function a_get_action_for_line (string $s_line, array $a_status, &$a_key_cursor_location, &$i_list_depth, &$x_data, &$a_text_value_current, int $i_line, string $s_file_path) {
+  private static function a_get_action_for_line (string $s_line, array $a_status, &$a_key_cursor_location, &$i_list_depth, &$x_data, &$a_text_value_current, int $i_line, string $s_file_path, bool $b_auto_type_scalars = true, string &$s_text_value_type_hint = '', bool &$b_text_value_is_literal = false, bool &$b_in_html_comment = false, array &$a_next_numeric_key_by_parent_path = [], int &$i_html_comment_start_line = -1, string &$s_html_comment_start_line = '') {
 
     //  handle literals
     $i_literal_signature = self::i_leading_target_character_count('`', $s_line);
     if ($a_status[0] === 'within_literal') {
-      if ($i_literal_signature === $a_status[1]) return ['end_literal'];
+      if ($i_literal_signature === $a_status[1]) {
+        $s_text_value_type_hint = $a_status[2] ?? '';
+        $b_text_value_is_literal = $a_status[3] ?? false;
+        return ['end_literal'];
+      }
       array_push($a_text_value_current, $s_line);
       return $a_status;
     }
-    if ($i_literal_signature > 2) return ['within_literal', $i_literal_signature];
+    if ($i_literal_signature > 2) {
+      $s_fence_info = trim(substr($s_line, $i_literal_signature));
+      $s_text_value_type_hint = strtolower($s_fence_info);
+      $b_text_value_is_literal = ($s_text_value_type_hint === '');
+      if ($b_text_value_is_literal) {
+        $s_text_value_type_hint = '';
+      }
+      return ['within_literal', $i_literal_signature, $s_text_value_type_hint, $b_text_value_is_literal, $i_line, $s_line];
+    }
 
-    // always ignore whitespace if not within literal
-    if ( trim($s_line) === '' ) return ['ignore', 'whitespace'];
+    $s_line = self::s_remove_html_comments_from_line(
+      $s_line,
+      $b_in_html_comment,
+      $i_line,
+      $i_html_comment_start_line,
+      $s_html_comment_start_line
+    );
 
-    // // if line is a comment
-    // if ( substr(trim($s_line), 0, 1) === '\\' ) return ['ignore', 'comment'];  // this is actually just a single, escaped backslash
+    // ignore blank lines and comment-only lines, preserving active scalar context
+    if ( trim($s_line) === '' ) {
+      if ($a_status[0] === '' || $a_status[0] === 'ignore') {
+        return ['ignore', 'whitespace'];
+      }
+      return $a_status;
+    }
 
     $a_line_type = self::a_line_type_summary($s_line);
 
@@ -275,8 +436,10 @@ class Hashdown {
     // if we made it this far, it means we're about to make a new node
     // save off the waning node before making the new one
     if ($a_key_cursor_location) {
-      self::set_object_key($x_data, $a_key_cursor_location, implode(PHP_EOL, $a_text_value_current));
+      self::set_object_key($x_data, $a_key_cursor_location, self::x_parse_scalar(implode(PHP_EOL, $a_text_value_current), $b_auto_type_scalars, $s_text_value_type_hint, $b_text_value_is_literal));
       $a_text_value_current = [];
+      $s_text_value_type_hint = '';
+      $b_text_value_is_literal = false;
     }
 
     $i_max_hash_depth = ( count($a_key_cursor_location) - $i_list_depth ) + 1;
@@ -291,8 +454,26 @@ class Hashdown {
     }
 
     if ( $a_line_type[0] === 'array' ) {
+      if ( $a_line_type[2] > 1 ) {
+        throw new \Exception(self::s_parse_error_message(
+          'Unsupported list marker '
+            . self::s_depth_marker('-', $a_line_type[2])
+            . ': Hashdown only supports a single "-" for scalar list items (Markdown unordered-list style). '
+            . 'Nested dash lists are not supported, and multi-dash markers like "--" are not Markdown list syntax. '
+            . 'For nested structures, use "#" headers for all but the deepest level.',
+          $i_line,
+          $s_line,
+          $s_file_path
+        ));
+      }
       if ( $a_line_type[2] > $i_max_list_depth ) {
-        throw new \Exception('Invalid node depth at line ' . ($i_line + 1) . ': ' . $s_line);
+        throw new \Exception(self::s_parse_error_message(
+          'Invalid list placement: a "-" list item is not allowed here. '
+            . 'Dash lists are only for scalar values under a header (or as a top-level list)',
+          $i_line,
+          $s_line,
+          $s_file_path
+        ));
       }
 
       $i_relative_hash_depth = $a_line_type[2] - $i_list_depth;
@@ -300,7 +481,7 @@ class Hashdown {
       for ($i = $i_relative_hash_depth; $i < 1; $i++) {
         array_pop($a_key_cursor_location);  // use array_slice instead: array_slice($food, 0, -3);
       }
-      array_push($a_key_cursor_location, self::i_get_object_next_numeric_key($x_data, $a_key_cursor_location));
+      array_push($a_key_cursor_location, self::i_take_next_numeric_key($a_next_numeric_key_by_parent_path, $a_key_cursor_location));
       if ( $a_line_type[1] ) {
         array_push($a_text_value_current, $a_line_type[1]);
         return ['new_array'];
@@ -310,19 +491,81 @@ class Hashdown {
     $i_list_depth = 0;
     if ( $a_line_type[0] === 'object' ) {
       if ( $a_line_type[2] > $i_max_hash_depth ) {
-        throw new \Exception('Invalid node depth at line ' . ($i_line + 1) . ': ' . $s_line);
+        // Always report the mechanical depth failure. When the previous node was a
+        // "-" list item, also explain the dash-list limitation — intent is ambiguous
+        // (nested under "-" vs moving on to another key at the wrong depth).
+        $s_reason = 'Invalid header depth: got ' . self::s_depth_marker('#', $a_line_type[2])
+          . ' (depth ' . $a_line_type[2] . '), but the maximum allowed here is '
+          . self::s_depth_marker('#', $i_max_hash_depth) . ' (depth ' . $i_max_hash_depth . '). '
+          . 'Header levels cannot be skipped.';
+        if ($a_status[0] === 'new_array') {
+          $s_reason .= ' If this "#" header was meant as nested data under the preceding "-" list item: '
+            . 'dash lists only support scalar values. '
+            . 'For list items with nested keys, use an empty "#" header instead of "-".';
+        }
+        throw new \Exception(self::s_parse_error_message(
+          $s_reason,
+          $i_line,
+          $s_line,
+          $s_file_path
+        ));
       }
       $i_relative_hash_depth = $a_line_type[2] - count($a_key_cursor_location);
       for ($i = $i_relative_hash_depth; $i < 1; $i++) {
         array_pop($a_key_cursor_location);  // use array_slice instead: array_slice($food, 0, -3);
       }
       if ( $a_line_type[1] === '') {
-        array_push($a_key_cursor_location, self::i_get_object_next_numeric_key($x_data, $a_key_cursor_location));
+        array_push($a_key_cursor_location, self::i_take_next_numeric_key($a_next_numeric_key_by_parent_path, $a_key_cursor_location));
       }
-      else array_push($a_key_cursor_location, $a_line_type[1]);
+      else {
+        self::i_sync_numeric_key_counter($a_next_numeric_key_by_parent_path, $a_key_cursor_location, $a_line_type[1]);
+        array_push($a_key_cursor_location, $a_line_type[1]);
+      }
 
       return ['new_object'];
     }
+  }
+
+  /**
+   * Builds a parse error message with location and the offending line.
+   *
+   * @param string $s_reason What went wrong.
+   * @param int $i_line Zero-based line index.
+   * @param string $s_line The offending line content.
+   * @param string $s_file_path Optional file path for location context.
+   * @return string The formatted exception message.
+   */
+  private static function s_parse_error_message(string $s_reason, int $i_line, string $s_line, string $s_file_path = ''): string {
+    $s_line_display = $s_line === '' ? '(empty line)' : $s_line;
+    return $s_reason . ' at ' . self::s_parse_error_location($i_line, $s_file_path) . ': ' . $s_line_display;
+  }
+
+  /**
+   * Formats the location portion of a parse error (line number and optional file path).
+   *
+   * @param int $i_line Zero-based line index.
+   * @param string $s_file_path Optional file path.
+   * @return string e.g. "line 3" or "line 3 of path/to/file.md".
+   */
+  private static function s_parse_error_location(int $i_line, string $s_file_path = ''): string {
+    $i_display_line = $i_line + 1;
+    return $s_file_path !== ''
+      ? 'line ' . $i_display_line . ' of ' . $s_file_path
+      : 'line ' . $i_display_line;
+  }
+
+  /**
+   * Formats a depth marker string for error messages.
+   *
+   * @param string $s_character '#' for headers or '-' for lists.
+   * @param int $i_depth The depth to represent.
+   * @return string Repeated marker characters, or a readable fallback for depth 0.
+   */
+  private static function s_depth_marker(string $s_character, int $i_depth): string {
+    if ($i_depth < 1) {
+      return '(no ' . ($s_character === '#' ? 'header' : 'list') . ' allowed here)';
+    }
+    return str_repeat($s_character, $i_depth);
   }
 
   /**
@@ -336,8 +579,6 @@ class Hashdown {
     $a_special_chars = [
       '#' => 'object',
       '-' => 'array',
-      // '>' => 1,
-      // '\\' => 1,
     ];
     $s_char_0 = $s_line[0];
     $default_return = [false, false, false];  // header, key, and level
@@ -351,7 +592,7 @@ class Hashdown {
     }
     $is_key_or_value_present = $i_first_space ? $i_first_space < (strlen($s_line) - 1) : false;
     if ($is_key_or_value_present) {
-      $s_key_or_value = substr($s_line, $i_first_space + 1);
+      $s_key_or_value = trim(substr($s_line, $i_first_space + 1));
     }
     return [
       $a_special_chars[$s_char_0],
@@ -361,31 +602,170 @@ class Hashdown {
   }
 
   /**
-   * Gets the next numeric key for an object in the array.
+   * Returns a stable map key for the next numeric index at a parent path.
    *
-   * @param array &$a_array The array to check.
-   * @param array $a_keys The current keys path.
+   * @param array $a_parent_keys The parent key path.
+   * @return string The parent path key.
+   */
+  private static function s_parent_path_key(array $a_parent_keys): string {
+    return implode("\0", $a_parent_keys);
+  }
+
+  /**
+   * Returns the next sequential numeric key for a parent and advances its counter.
+   *
+   * @param array &$a_next_numeric_key_by_parent_path Counters keyed by parent path.
+   * @param array $a_parent_keys The parent key path.
    * @return int The next numeric key.
    */
-  private static function i_get_object_next_numeric_key (&$a_array, $a_keys = []) {
-    $a_current = &$a_array;
-    foreach($a_keys as $s_key) {
-      $a_current = &$a_current[$s_key];
-      if ( ! is_array($a_current) ) {
-        // if one of the keys isn't an array, then it will be a brand new node, and so the '0' index will be available
-        return 0;
-      }
+  private static function i_take_next_numeric_key(array &$a_next_numeric_key_by_parent_path, array $a_parent_keys): int {
+    $s_parent_path = self::s_parent_path_key($a_parent_keys);
+    if (! isset($a_next_numeric_key_by_parent_path[$s_parent_path])) {
+      $a_next_numeric_key_by_parent_path[$s_parent_path] = 0;
     }
-    if ( ! is_array($a_current) ) return 0;
+    $i_key = $a_next_numeric_key_by_parent_path[$s_parent_path];
+    $a_next_numeric_key_by_parent_path[$s_parent_path]++;
+    return $i_key;
+  }
 
-    $highest = 0;
-    foreach ($a_current as $i => $dummy) {
-      if ( ! is_numeric($i) ) continue;
-      if ($i >= $highest) {
-        $highest = $i + 1;
-      }
+  /**
+   * Advances a parent numeric counter when an explicit numeric key is used.
+   *
+   * @param array &$a_next_numeric_key_by_parent_path Counters keyed by parent path.
+   * @param array $a_parent_keys The parent key path.
+   * @param string $s_key The explicit key from the line.
+   * @return void
+   */
+  private static function i_sync_numeric_key_counter(array &$a_next_numeric_key_by_parent_path, array $a_parent_keys, string $s_key): void {
+    if (! is_numeric($s_key)) {
+      return;
     }
-    return $highest;
+    $s_parent_path = self::s_parent_path_key($a_parent_keys);
+    $i_next = (int) $s_key + 1;
+    if (! isset($a_next_numeric_key_by_parent_path[$s_parent_path]) || $a_next_numeric_key_by_parent_path[$s_parent_path] < $i_next) {
+      $a_next_numeric_key_by_parent_path[$s_parent_path] = $i_next;
+    }
+  }
+
+  /**
+   * Parses a scalar value from Markdown text.
+   *
+   * @param string $s_value The raw scalar text.
+   * @param bool $b_auto_type_scalars If true, scalar values will be auto-typed.
+   * @param string $s_type_hint Optional explicit type hint from fenced blocks.
+   * @param bool $b_is_literal If true, preserve the scalar as literal text.
+   * @return mixed The parsed scalar value.
+   */
+  private static function x_parse_scalar(string $s_value, bool $b_auto_type_scalars = true, string $s_type_hint = '', bool $b_is_literal = false) {
+    if ($b_is_literal) {
+      return $s_value;
+    }
+    $s_trimmed = trim($s_value);
+    if ($s_type_hint !== '') {
+      return self::x_cast_scalar($s_value, $s_type_hint);
+    }
+    if (! $b_auto_type_scalars) {
+      return $s_value;
+    }
+    if ( self::b_is_inline_backtick_string($s_trimmed) ) {
+      return substr($s_trimmed, 1, -1);
+    }
+    return self::x_auto_type_scalar($s_trimmed);
+  }
+
+  /**
+   * Returns true if the value is a valid integer literal.
+   *
+   * @param string $s_value The scalar text to check.
+   * @return bool True if the text represents an integer.
+   */
+  private static function b_is_integer_literal(string $s_value) {
+    return preg_match('/^[+-]?(?:0|[1-9]\d*)$/', $s_value) === 1;
+  }
+
+  /**
+   * Returns true if the value is a valid float literal.
+   *
+   * @param string $s_value The scalar text to check.
+   * @return bool True if the text represents a floating-point number.
+   */
+  private static function b_is_float_literal(string $s_value) {
+    return preg_match('/^[+-]?(?:\d+\.\d*|\.\d+)(?:[eE][+-]?\d+)?$/', $s_value) === 1
+      || preg_match('/^[+-]?\d+[eE][+-]?\d+$/', $s_value) === 1;
+  }
+
+  /**
+   * Casts a scalar string using an explicit type hint.
+   *
+   * @param string $s_value The scalar text to cast.
+   * @param string $s_type_hint The explicit type hint (int, float, bool, null, string).
+   * @return mixed The cast value.
+   */
+  private static function x_cast_scalar(string $s_value, string $s_type_hint) {
+    switch ($s_type_hint) {
+      case 'int':
+        return intval($s_value);
+      case 'float':
+        return floatval($s_value);
+      case 'bool':
+        $s_trimmed = trim($s_value);
+        if (strcasecmp($s_trimmed, 'false') === 0 || strcasecmp($s_trimmed, '0') === 0 || strcasecmp($s_trimmed, '0.0') === 0 || strcasecmp($s_trimmed, 'null') === 0) {
+          return false;
+        }
+        if (strcasecmp($s_trimmed, 'true') === 0 || strcasecmp($s_trimmed, '1') === 0 || strcasecmp($s_trimmed, '0.1') === 0) {
+          return true;
+        }
+        return (bool) $s_value;
+      case 'null':
+        return null;
+      case 'string':
+      default:
+        return $s_value;
+    }
+  }
+
+  /**
+   * Converts a scalar string to its PHP type when auto-typing is enabled.
+   *
+   * @param string $s_value The scalar text to convert.
+   * @return mixed The converted PHP scalar value.
+   */
+  private static function x_auto_type_scalar(string $s_value) {
+    if ($s_value === '') {
+      return '';
+    }
+    if (strcasecmp($s_value, 'null') === 0) {
+      return null;
+    }
+    if (strcasecmp($s_value, 'true') === 0) {
+      return true;
+    }
+    if (strcasecmp($s_value, 'false') === 0) {
+      return false;
+    }
+    if (self::b_is_integer_literal($s_value)) {
+      if ($s_value !== '0' && preg_match('/^0[0-9]+$/', $s_value)) {
+        return $s_value;
+      }
+      return intval($s_value);
+    }
+    if (self::b_is_float_literal($s_value)) {
+      return floatval($s_value);
+    }
+    return $s_value;
+  }
+
+  /**
+   * Detects an inline backtick-wrapped scalar string.
+   *
+   * @param string $s_value The scalar text to inspect.
+   * @return bool True if the value is an inline backtick string.
+   */
+  private static function b_is_inline_backtick_string(string $s_value) {
+    return strlen($s_value) >= 2
+      && $s_value[0] === '`'
+      && $s_value[strlen($s_value) - 1] === '`'
+      && strpos($s_value, PHP_EOL) === false;
   }
 
   /**
@@ -400,9 +780,9 @@ class Hashdown {
     $a_current = &$a_array;
     foreach($a_keys as $s_key) {
       $a_current = &$a_current[$s_key];
-    	if ( ! is_array($a_current) ) {
-    		$a_current = [];
-    	}
+      if ( ! is_array($a_current) ) {
+        $a_current = [];
+      }
     }
     $a_current = $x_value;
   }
